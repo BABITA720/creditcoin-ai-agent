@@ -1,0 +1,1661 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aegis Sentinel | Attestcoin & Creditcoin Command Center</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        darkBg: '#030508',
+                        cardBg: '#080c14',
+                        borderCol: '#1a2638',
+                        accentCyan: '#06b6d4'
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Three.js for 3D Node Mesh Background -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        #mesh-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 0;
+            opacity: 0.45;
+        }
+        .glass-panel {
+            background: rgba(8, 12, 20, 0.8);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(30, 41, 59, 0.6);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+        }
+        .glass-sidebar {
+            background: rgba(5, 7, 11, 0.92);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+        ::-webkit-scrollbar {
+            width: 4px;
+            height: 4px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #030508;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #1e293b;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #06b6d4;
+        }
+    </style>
+</head>
+<body class="bg-darkBg text-slate-100 font-sans antialiased selection:bg-cyan-500 selection:text-black flex h-screen overflow-hidden relative">
+
+    <!-- 3D Node Mesh Background Container -->
+    <div id="mesh-container"></div>
+
+    <!-- Sidebar Backdrop Overlay -->
+    <div id="sidebarOverlay" onclick="toggleMobileSidebar()" class="fixed inset-0 bg-black/70 z-40 hidden backdrop-blur-sm transition-opacity"></div>
+
+    <!-- Left Sidebar Navigation -->
+    <aside id="sidebar" class="fixed inset-y-0 left-0 z-50 w-72 glass-sidebar border-r border-borderCol flex flex-col shadow-2xl transform -translate-x-full transition-transform duration-300 ease-in-out">
+        <div class="h-16 px-6 border-b border-borderCol flex items-center justify-between bg-gradient-to-r from-cyan-950/30 to-transparent">
+            <div class="flex items-center space-x-3">
+                <div class="h-9 w-9 rounded-xl bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/30 animate-pulse">
+                    <i class="fa-solid fa-shield-halved text-white text-sm"></i>
+                </div>
+                <div>
+                    <span class="text-[9px] uppercase tracking-widest text-cyan-400 font-extrabold">BUIDL CTC 2026</span>
+                    <h1 class="text-xs font-extrabold text-white tracking-tight">Aegis Command</h1>
+                </div>
+            </div>
+            <!-- Close button for sidebar -->
+            <button onclick="toggleMobileSidebar()" class="text-slate-400 hover:text-white p-2">
+                <i class="fa-solid fa-xmark text-base"></i>
+            </button>
+        </div>
+
+        <div class="flex-1 px-4 py-6 space-y-1.5 overflow-y-auto text-xs font-medium">
+            <button onclick="switchTab('dashboard')" id="nav-dashboard" class="w-full flex items-center space-x-3 px-3.5 py-3 rounded-xl bg-cyan-500/15 text-cyan-400 border border-cyan-500/30 transition shadow-lg shadow-cyan-500/5">
+                <i class="fa-solid fa-chart-pie w-4"></i>
+                <span class="font-bold">Dashboard / Overview</span>
+            </button>
+            <button onclick="switchTab('logs')" id="nav-logs" class="w-full flex items-center space-x-3 px-3.5 py-3 rounded-xl text-slate-400 hover:text-white hover:bg-borderCol/50 transition">
+                <i class="fa-solid fa-list-check w-4"></i>
+                <span>Cross-Chain Logs & Feeds</span>
+            </button>
+            <button onclick="switchTab('registry')" id="nav-registry" class="w-full flex items-center space-x-3 px-3.5 py-3 rounded-xl text-slate-400 hover:text-white hover:bg-borderCol/50 transition">
+                <i class="fa-solid fa-scale-balanced w-4"></i>
+                <span>Lien Registry & UCC-9</span>
+            </button>
+            <button onclick="switchTab('agents')" id="nav-agents" class="w-full flex items-center space-x-3 px-3.5 py-3 rounded-xl text-slate-400 hover:text-white hover:bg-borderCol/50 transition">
+                <i class="fa-solid fa-bolt-lightning w-4"></i>
+                <span>Autonomous Agents</span>
+            </button>
+            <button onclick="switchTab('staking')" id="nav-staking" class="w-full flex items-center space-x-3 px-3.5 py-3 rounded-xl text-slate-400 hover:text-white hover:bg-borderCol/50 transition">
+                <i class="fa-solid fa-coins w-4"></i>
+                <span>Operator Staking & APY</span>
+            </button>
+            <button onclick="switchTab('latency')" id="nav-latency" class="w-full flex items-center space-x-3 px-3.5 py-3 rounded-xl text-slate-400 hover:text-white hover:bg-borderCol/50 transition">
+                <i class="fa-solid fa-gauge-high w-4"></i>
+                <span>Speed & Latency Matrix</span>
+            </button>
+            <button onclick="switchTab('zkInspector')" id="nav-zkInspector" class="w-full flex items-center space-x-3 px-3.5 py-3 rounded-xl text-slate-400 hover:text-white hover:bg-borderCol/50 transition">
+                <i class="fa-solid fa-fingerprint w-4 text-cyan-400"></i>
+                <span>ZK-Proof Inspector</span>
+            </button>
+
+            <div class="pt-3 pb-1">
+                <div class="border-t border-borderCol px-2 pt-2 text-[10px] uppercase font-bold text-slate-500 tracking-wider">New Merged Modules</div>
+            </div>
+            <button onclick="switchTab('multichainBridge')" id="nav-multichainBridge" class="w-full flex items-center space-x-3 px-3.5 py-3 rounded-xl text-slate-400 hover:text-white hover:bg-borderCol/50 transition">
+                <i class="fa-solid fa-network-wired w-4 text-emerald-400"></i>
+                <span>Multi-Chain Bridge Sync</span>
+            </button>
+            <button onclick="switchTab('collateralVault')" id="nav-collateralVault" class="w-full flex items-center space-x-3 px-3.5 py-3 rounded-xl text-slate-400 hover:text-white hover:bg-borderCol/50 transition">
+                <i class="fa-solid fa-vault w-4 text-amber-400"></i>
+                <span>Collateral Vault Manager</span>
+            </button>
+            <button onclick="switchTab('governanceDao')" id="nav-governanceDao" class="w-full flex items-center space-x-3 px-3.5 py-3 rounded-xl text-slate-400 hover:text-white hover:bg-borderCol/50 transition">
+                <i class="fa-solid fa-landmark w-4 text-purple-400"></i>
+                <span>Governance & DAO Votes</span>
+            </button>
+            <button onclick="switchTab('analyticsHub')" id="nav-analyticsHub" class="w-full flex items-center space-x-3 px-3.5 py-3 rounded-xl text-slate-400 hover:text-white hover:bg-borderCol/50 transition">
+                <i class="fa-solid fa-chart-line w-4 text-cyan-400"></i>
+                <span>Advanced Analytics Hub</span>
+            </button>
+            <button onclick="switchTab('verifyFirst')" id="nav-verifyFirst" class="w-full flex items-center space-x-3 px-3.5 py-3 rounded-xl text-slate-400 hover:text-white hover:bg-borderCol/50 transition">
+                <i class="fa-solid fa-shield-check w-4 text-cyan-400"></i>
+                <span>✅ Verify First Guardrail</span>
+            </button>
+            <button onclick="switchTab('autoSettlement')" id="nav-autoSettlement" class="w-full flex items-center space-x-3 px-3.5 py-3 rounded-xl text-slate-400 hover:text-white hover:bg-borderCol/50 transition">
+                <i class="fa-solid fa-bolt w-4 text-emerald-400"></i>
+                <span>Auto-Settlement Payouts</span>
+            </button>
+
+            <div class="pt-3 pb-1">
+                <div class="border-t border-borderCol px-2 pt-2 text-[10px] uppercase font-bold text-cyan-400 tracking-wider">Advanced Additions</div>
+            </div>
+            <button onclick="switchTab('nodeHealthMap')" id="nav-nodeHealthMap" class="w-full flex items-center space-x-3 px-3.5 py-3 rounded-xl text-slate-400 hover:text-white hover:bg-borderCol/50 transition">
+                <i class="fa-solid fa-server w-4 text-cyan-400"></i>
+                <span>Node Health & Mesh</span>
+            </button>
+            <button onclick="switchTab('flashLoanAuditor')" id="nav-flashLoanAuditor" class="w-full flex items-center space-x-3 px-3.5 py-3 rounded-xl text-slate-400 hover:text-white hover:bg-borderCol/50 transition">
+                <i class="fa-solid fa-triangle-exclamation w-4 text-amber-400"></i>
+                <span>Flash Loan Risk Auditor</span>
+            </button>
+
+            <div class="pt-3 pb-1">
+                <div class="border-t border-borderCol px-2 pt-2 text-[10px] uppercase font-bold text-amber-400 tracking-wider">Elite Modules</div>
+            </div>
+            <button onclick="switchTab('whaleRadar')" id="nav-whaleRadar" class="w-full flex items-center space-x-3 px-3.5 py-3 rounded-xl text-slate-400 hover:text-white hover:bg-borderCol/50 transition">
+                <i class="fa-solid fa-water w-4 text-cyan-400"></i>
+                <span>Whale Liquidation Radar</span>
+            </button>
+            <button onclick="switchTab('gasArbitrage')" id="nav-gasArbitrage" class="w-full flex items-center space-x-3 px-3.5 py-3 rounded-xl text-slate-400 hover:text-white hover:bg-borderCol/50 transition">
+                <i class="fa-solid fa-scale-unbalanced-flipped w-4 text-emerald-400"></i>
+                <span>⛽ Gas Arbitrage Matrix</span>
+            </button>
+            <button onclick="switchTab('securitySandbox')" id="nav-securitySandbox" class="w-full flex items-center space-x-3 px-3.5 py-3 rounded-xl text-slate-400 hover:text-white hover:bg-borderCol/50 transition">
+                <i class="fa-solid fa-laptop-code w-4 text-purple-400"></i>
+                <span>Precompile Sandbox</span>
+            </button>
+            <button onclick="switchTab('telemetryGraph')" id="nav-telemetryGraph" class="w-full flex items-center space-x-3 px-3.5 py-3 rounded-xl text-slate-400 hover:text-white hover:bg-borderCol/50 transition">
+                <i class="fa-solid fa-chart-area w-4 text-amber-400"></i>
+                <span>Node Telemetry Graph</span>
+            </button>
+            <button onclick="switchTab('complianceExport')" id="nav-complianceExport" class="w-full flex items-center space-x-3 px-3.5 py-3 rounded-xl text-slate-400 hover:text-white hover:bg-borderCol/50 transition">
+                <i class="fa-solid fa-file-invoice-dollar w-4 text-emerald-400"></i>
+                <span>Compliance & Tax Export</span>
+            </button>
+
+            <div class="pt-3 pb-1">
+                <div class="border-t border-borderCol px-2 pt-2 text-[10px] uppercase font-bold text-rose-400 tracking-wider">Ultra Elite Shield</div>
+            </div>
+            <button onclick="switchTab('aiMevShield')" id="nav-aiMevShield" class="w-full flex items-center space-x-3 px-3.5 py-3 rounded-xl text-slate-400 hover:text-white hover:bg-borderCol/50 transition">
+                <i class="fa-solid fa-shield-virus w-4 text-rose-400"></i>
+                <span>AI MEV & Frontrun Shield</span>
+            </button>
+            <button onclick="switchTab('zkDidStudio')" id="nav-zkDidStudio" class="w-full flex items-center space-x-3 px-3.5 py-3 rounded-xl text-slate-400 hover:text-white hover:bg-borderCol/50 transition">
+                <i class="fa-solid fa-id-card w-4 text-cyan-400"></i>
+                <span>ZK-DID Credit Passport</span>
+            </button>
+
+            <div class="pt-3 pb-1">
+                <div class="border-t border-borderCol px-2 pt-2 text-[10px] uppercase font-bold text-cyan-300 tracking-wider">CTC Ultra Additions</div>
+            </div>
+            <button onclick="switchTab('refinanceOptimizer')" id="nav-refinanceOptimizer" class="w-full flex items-center space-x-3 px-3.5 py-3 rounded-xl text-slate-400 hover:text-white hover:bg-borderCol/50 transition">
+                <i class="fa-solid fa-arrows-rotate w-4 text-cyan-400"></i>
+                <span>Debt Refinance Optimizer</span>
+            </button>
+            <button onclick="switchTab('gasSponsorPool')" id="nav-gasSponsorPool" class="w-full flex items-center space-x-3 px-3.5 py-3 rounded-xl text-slate-400 hover:text-white hover:bg-borderCol/50 transition">
+                <i class="fa-solid fa-gas-pump w-4 text-emerald-400"></i>
+                <span>Gasless Sponsor Pool</span>
+            </button>
+            <button onclick="switchTab('lsdYieldBooster')" id="nav-lsdYieldBooster" class="w-full flex items-center space-x-3 px-3.5 py-3 rounded-xl text-slate-400 hover:text-white hover:bg-borderCol/50 transition">
+                <i class="fa-solid fa-chart-pie w-4 text-purple-400"></i>
+                <span>LSD Yield Booster</span>
+            </button>
+            <button onclick="switchTab('immutableSnapshot')" id="nav-immutableSnapshot" class="w-full flex items-center space-x-3 px-3.5 py-3 rounded-xl text-slate-400 hover:text-white hover:bg-borderCol/50 transition">
+                <i class="fa-solid fa-cube w-4 text-amber-400"></i>
+                <span>Immutable Proof Snapshot</span>
+            </button>
+            
+            <div class="pt-3 pb-1">
+                <div class="border-t border-borderCol px-2 pt-2 text-[10px] uppercase font-bold text-red-400 tracking-wider">Autonomous Security</div>
+            </div>
+            <button onclick="switchTab('circuitBreaker')" id="nav-circuitBreaker" class="w-full flex items-center space-x-3 px-3.5 py-3 rounded-xl text-slate-400 hover:text-white hover:bg-borderCol/50 transition">
+                <i class="fa-solid fa-power-off w-4 text-red-400 animate-pulse"></i>
+                <span class="text-red-300 font-bold">Autonomous Circuit Breaker & Emergency Auto-Liquidation Shield</span>
+            </button>
+
+            <!-- ========================================== -->
+            <!-- NAYE BRAND NEW FEATURES ADDED WITH BUTTONS -->
+            <!-- ========================================== -->
+            <div class="pt-3 pb-1">
+                <div class="border-t border-borderCol px-2 pt-2 text-[10px] uppercase font-bold text-indigo-400 tracking-wider">Brand New Modules</div>
+            </div>
+            <button onclick="switchTab('quantumResistantVault')" id="nav-quantumResistantVault" class="w-full flex items-center space-x-3 px-3.5 py-3 rounded-xl text-slate-400 hover:text-white hover:bg-borderCol/50 transition">
+                <i class="fa-solid fa-atom w-4 text-indigo-400 animate-spin"></i>
+                <span>Quantum-Resistant Vault Shield</span>
+            </button>
+            <button onclick="switchTab('aiCreditUnderwriter')" id="nav-aiCreditUnderwriter" class="w-full flex items-center space-x-3 px-3.5 py-3 rounded-xl text-slate-400 hover:text-white hover:bg-borderCol/50 transition">
+                <i class="fa-solid fa-brain w-4 text-pink-400"></i>
+                <span>AI Deep Credit Underwriter</span>
+            </button>
+        </div>
+
+        <div class="p-4 border-t border-borderCol space-y-2">
+            <div class="glass-panel p-3 rounded-xl text-[11px] space-y-1">
+                <div class="text-slate-400 flex justify-between"><span>Network:</span> <span class="text-emerald-400 font-mono font-bold">Testnet</span></div>
+                <div class="text-slate-400 flex justify-between"><span>Precompile:</span> <span class="text-cyan-400 font-mono font-bold">0x0FD2</span></div>
+                <div class="text-slate-400 flex justify-between"><span>RPC Latency:</span> <span class="text-cyan-300 font-mono font-bold">12ms</span></div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Right Main Content Area -->
+    <div class="flex-1 flex flex-col h-screen overflow-y-auto relative z-10 w-full">
+        <header class="sticky top-0 z-30 border-b border-borderCol bg-darkBg/80 backdrop-blur-xl">
+            <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <!-- 3-Line Hamburger Trigger -->
+                    <button onclick="toggleMobileSidebar()" class="p-2 rounded-xl glass-panel text-cyan-400 hover:text-white transition">
+                        <i class="fa-solid fa-bars text-base"></i>
+                    </button>
+                    <span class="text-[11px] sm:text-xs text-slate-300 font-semibold flex items-center truncate"><span class="h-2 w-2 rounded-full bg-emerald-400 animate-pulse mr-2 flex-shrink-0 shadow-lg shadow-emerald-400/50"></span> <span class="hidden sm:inline">Command Center Active • </span>Creditcoin 0x0FD2</span>
+                </div>
+                <div class="flex items-center space-x-2 sm:space-x-3">
+                    <!-- Quick action buttons -->
+                    <button onclick="switchTab('circuitBreaker')" class="hidden md:flex px-3 py-2 bg-red-950/40 hover:bg-red-900/50 border border-red-500/40 text-red-300 text-xs font-semibold rounded-xl transition items-center space-x-1.5 shadow-md">
+                        <i class="fa-solid fa-power-off text-red-400 animate-pulse"></i>
+                        <span>Circuit Breaker Shield</span>
+                    </button>
+                    <!-- Brand new top header buttons for quick access -->
+                    <button onclick="switchTab('quantumResistantVault')" class="hidden lg:flex px-3 py-2 bg-indigo-950/40 hover:bg-indigo-900/50 border border-indigo-500/40 text-indigo-300 text-xs font-semibold rounded-xl transition items-center space-x-1.5 shadow-md">
+                        <i class="fa-solid fa-atom text-indigo-400"></i>
+                        <span>Quantum Shield</span>
+                    </button>
+                    <button onclick="exportJudgesDeck()" class="hidden sm:flex px-3 py-2 glass-panel hover:bg-borderCol text-emerald-400 text-xs font-semibold rounded-xl transition items-center space-x-2 shadow-md hover:border-emerald-500/50">
+                        <i class="fa-solid fa-file-shield"></i>
+                        <span>Export Pitch Summary</span>
+                    </button>
+                    <button onclick="toggleAssistantDrawer()" class="px-3 py-2 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white text-xs font-semibold rounded-xl shadow-lg shadow-cyan-500/20 transition flex items-center space-x-1.5 sm:space-x-2 border border-cyan-400/30">
+                        <i class="fa-solid fa-microchip"></i>
+                        <span>AI Assistant</span>
+                    </button>
+                    <button onclick="connectWalletSim()" id="walletBtn" class="px-3 py-2 glass-panel hover:bg-borderCol text-cyan-300 text-xs font-medium rounded-xl transition flex items-center space-x-1.5 sm:space-x-2 shadow-md hover:border-cyan-500/50">
+                        <i class="fa-solid fa-wallet"></i>
+                        <span id="walletText">Connect</span>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <main class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6 sm:space-y-8 pb-24 flex-1 w-full">
+            <!-- DASHBOARD TAB -->
+            <div id="tab-dashboard" class="space-y-8 tab-pane">
+                <div class="relative overflow-hidden rounded-3xl glass-panel p-6 sm:p-8 shadow-2xl border border-cyan-500/20">
+                    <div class="absolute right-0 top-0 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none"></div>
+                    <div class="absolute left-1/3 bottom-0 w-64 h-64 bg-blue-600/10 rounded-full blur-3xl pointer-events-none"></div>
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-center relative z-10">
+                        <div class="lg:col-span-2 space-y-4">
+                            <div class="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 text-xs font-semibold shadow-inner">
+                                <span class="h-2 w-2 rounded-full bg-cyan-400 animate-ping"></span>
+                                <span>Zero Claim Forms • 15s Settlement via Creditcoin</span>
+                            </div>
+                            <h2 class="text-2xl sm:text-4xl lg:text-5xl font-black text-white tracking-tight drop-shadow-md">One Asset, One Lien. Zero Trust Bottlenecks.</h2>
+                            <p class="text-slate-300 text-xs sm:text-sm leading-relaxed">
+                                Aegis watches cross-chain collateral, verifies multi-protocol loans cryptographically through Attestcoin, and settles claims automatically from bonded operators in seconds.
+                            </p>
+                            <div class="flex flex-wrap gap-2 sm:gap-3 pt-2">
+                                <button onclick="runSimulatorPipeline()" class="px-4 py-2.5 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white text-xs font-bold rounded-xl shadow-lg shadow-cyan-500/20 transition flex items-center space-x-2 border border-cyan-400/30">
+                                    <i class="fa-solid fa-play"></i>
+                                    <span>Run Pipeline Simulator</span>
+                                </button>
+                                <button onclick="verifyProofHash()" class="px-4 py-2.5 glass-panel hover:bg-borderCol text-slate-200 text-xs font-semibold rounded-xl transition flex items-center space-x-2 shadow-md hover:border-cyan-500/40">
+                                    <i class="fa-solid fa-fingerprint text-cyan-400"></i>
+                                    <span>Verify 0x0FD2 Precompile</span>
+                                </button>
+                                <button onclick="switchTab('quantumResistantVault')" class="px-4 py-2.5 bg-indigo-950/50 hover:bg-indigo-900/60 border border-indigo-500/40 text-indigo-300 text-xs font-semibold rounded-xl transition flex items-center space-x-2 shadow-md">
+                                    <i class="fa-solid fa-atom text-indigo-400"></i>
+                                    <span>Quantum Shield</span>
+                                </button>
+                                <button onclick="openZkModal()" class="px-4 py-2.5 bg-purple-600/20 hover:bg-purple-600/30 border border-purple-500/40 text-purple-300 text-xs font-semibold rounded-xl transition flex items-center space-x-2 shadow-md">
+                                    <i class="fa-solid fa-shield-halved"></i>
+                                    <span>Inspect ZK Proof</span>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="glass-panel p-5 rounded-2xl space-y-3 shadow-2xl border border-cyan-500/20">
+                            <div class="text-xs text-slate-300 font-semibold uppercase tracking-wider flex justify-between">
+                                <span>Live Telemetry</span>
+                                <span class="text-cyan-400 font-mono text-[10px] font-bold">Gas: 21 Gwei</span>
+                            </div>
+                            <div class="grid grid-cols-2 gap-3">
+                                <div class="p-3 bg-darkBg/60 rounded-xl border border-borderCol">
+                                    <span class="text-[10px] text-slate-400 block">Proved Events</span>
+                                    <span class="text-white font-bold text-sm sm:text-base">22,272</span>
+                                </div>
+                                <div class="p-3 bg-darkBg/60 rounded-xl border border-borderCol">
+                                    <span class="text-[10px] text-slate-400 block">Total Volume</span>
+                                    <span class="text-cyan-400 font-bold text-xs sm:text-sm">$154,025,921</span>
+                                </div>
+                                <div class="p-3 bg-darkBg/60 rounded-xl border border-borderCol">
+                                    <span class="text-[10px] text-slate-400 block">Block Precompile</span>
+                                    <span class="text-amber-400 font-mono text-xs font-bold">0x0FD2</span>
+                                </div>
+                                <div class="p-3 bg-darkBg/60 rounded-xl border border-borderCol">
+                                    <span class="text-[10px] text-slate-400 block">Settlement Time</span>
+                                    <span class="text-emerald-400 font-bold text-xs">~15 Seconds</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="glass-panel rounded-3xl p-6 space-y-4 shadow-2xl border border-borderCol">
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+                        <h3 class="text-sm font-bold text-white flex items-center space-x-2"><i class="fa-solid fa-percent text-cyan-400"></i><span>AI Risk-Based Dynamic Interest Rate Engine</span></h3>
+                        <span class="px-2.5 py-1 rounded-full bg-cyan-500/10 text-cyan-400 text-[10px] font-bold border border-cyan-500/30">LIVE PRECOMPILE SYNC</span>
+                    </div>
+                    <p class="text-xs text-slate-300">Automatically adjusts protocol loan APR based on live on-chain credit scores verified through Creditcoin precompile 0x0FD2.</p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
+                        <div class="space-y-3 bg-darkBg/60 p-4 rounded-2xl border border-borderCol">
+                            <label class="block text-xs text-slate-200">Borrower Credit Risk Score: <span id="riskScoreVal" class="text-emerald-400 font-bold">780 / 850 (Prime Tier)</span></label>
+                            <input type="range" min="300" max="850" step="10" value="780" class="w-full accent-cyan-500 cursor-pointer" oninput="updateDynamicRate(this.value)">
+                            <div class="text-[11px] text-slate-400 flex justify-between"><span>Base Lending Rate: 5.0%</span><span>Dynamic Risk Surcharge: <strong id="surchargeVal" class="text-amber-400">+1.2%</strong></span></div>
+                        </div>
+                        <div class="bg-darkBg/60 p-4 rounded-2xl border border-borderCol flex flex-col justify-center items-center text-center space-y-1 shadow-inner">
+                            <span class="text-xs text-slate-400 uppercase tracking-wider">Final Assigned Loan APR</span>
+                            <span id="finalAprVal" class="text-3xl font-black text-cyan-400 drop-shadow-md">6.2%</span>
+                            <span class="text-[10px] text-emerald-400 font-semibold flex items-center mt-1"><i class="fa-solid fa-shield-check mr-1"></i> Instant Precompile Risk-Lock Active</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="glass-panel rounded-3xl p-6 space-y-4 shadow-2xl border border-borderCol">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-sm font-bold text-white flex items-center space-x-2"><i class="fa-solid fa-terminal text-cyan-400"></i><span>Live Precompile 0x0FD2 Execution Stream</span></h3>
+                        <div class="flex items-center space-x-2">
+                            <span class="h-2 w-2 rounded-full bg-emerald-400 animate-ping"></span>
+                            <span class="px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 text-[10px] font-bold border border-emerald-500/30">LIVE SYNCING</span>
+                        </div>
+                    </div>
+                    <div id="logStreamBox" class="bg-darkBg/80 p-4 rounded-2xl border border-borderCol font-mono text-[11px] text-slate-300 space-y-2 h-36 overflow-y-auto shadow-inner">
+                        <div class="text-cyan-400">> [0x0FD2] Initializing cross-chain Merkle proof verification engine...</div>
+                        <div>> [SEPOLIA_TX] Block #5389140 parsed successfully. Gas used: 21,050</div>
+                        <div class="text-emerald-400">> [VERIFIED] State inclusion confirmed. Zero-trust boundary locked.</div>
+                        <div class="text-amber-400">> [ORACLE] Dynamic risk score updated for active borrower address 0x89F...32e4</div>
+                        <div class="text-slate-400">> [ATTESTCOIN] Operator consensus reached across 12 validator nodes.</div>
+                    </div>
+                </div>
+
+                <!-- YEH RAHI NAYI CHIZ - AB SIRF DASHBOARD MAI DIKHEGI -->
+                <div class="glass-panel rounded-3xl p-6 sm:p-8 space-y-6 shadow-2xl border border-cyan-500/40">
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-borderCol pb-4 gap-2">
+                        <div>
+                            <span class="text-[10px] font-extrabold uppercase tracking-widest text-cyan-400">Extended Protocol Architecture</span>
+                            <h3 class="text-base sm:text-lg font-black text-white flex items-center space-x-2 mt-1">
+                                <i class="fa-solid fa-layer-group text-cyan-400"></i>
+                                <span>Aegis Sentinel Protocol Extension & Extended Telemetry Stream</span>
+                            </h3>
+                        </div>
+                        <span class="px-3 py-1 rounded-full bg-cyan-500/15 text-cyan-400 text-xs font-bold border border-cyan-500/30">INTERFACE EXPANSION MODULE</span>
+                    </div>
+                    <p class="text-xs text-slate-300 leading-relaxed">
+                        Yeh module dashboard ke interface ko lamba aur expansive banane ke liye niche add kiya gaya hai bina kisi purane component ko chhede. Isme aapko additional network throughput metrics, extended node verification logs aur cross-chain ledger depth ki visibility milti hai.
+                    </p>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div class="p-4 bg-darkBg/80 rounded-2xl border border-borderCol space-y-2 shadow-inner">
+                            <span class="text-[10px] text-slate-400 uppercase block font-semibold">Extended Block Depth</span>
+                            <span class="text-xl font-black text-cyan-400 font-mono">#5,491,204</span>
+                            <p class="text-[11px] text-slate-500">Synced across all connected L1 relay nodes.</p>
+                        </div>
+                        <div class="p-4 bg-darkBg/80 rounded-2xl border border-borderCol space-y-2 shadow-inner">
+                            <span class="text-[10px] text-slate-400 uppercase block font-semibold">Precompile Throughput</span>
+                            <span class="text-xl font-black text-emerald-400 font-mono">99.99% OK</span>
+                            <p class="text-[11px] text-slate-500">Zero packet loss on 0x0FD2 channel.</p>
+                        </div>
+                        <div class="p-4 bg-darkBg/80 rounded-2xl border border-borderCol space-y-2 shadow-inner">
+                            <span class="text-[10px] text-slate-400 uppercase block font-semibold">Active Vault Integrity</span>
+                            <span class="text-xl font-black text-amber-400 font-mono">OPTIMIZED</span>
+                            <p class="text-[11px] text-slate-500">Single-lien protection fully enforced.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Naye features jo dashboard me niche add kiye gaye hain (bina purani jagah badle) -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="glass-panel rounded-3xl p-6 space-y-4 shadow-2xl border border-cyan-500/30">
+                        <div class="flex items-center justify-between border-b border-borderCol pb-3">
+                            <h4 class="text-sm font-bold text-white flex items-center space-x-2">
+                                <i class="fa-solid fa-bolt text-emerald-400"></i>
+                                <span>Quick Auto-Settlement Status</span>
+                            </h4>
+                            <span class="px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 text-[10px] font-bold">ACTIVE</span>
+                        </div>
+                        <p class="text-xs text-slate-300">Instant cross-chain house balance & escrow release monitor linked directly with precompile 0x0FD2.</p>
+                        <div class="p-3 bg-darkBg/80 rounded-xl border border-borderCol flex justify-between items-center text-xs font-mono">
+                            <span class="text-slate-400">Instant Payout Balance:</span>
+                            <span class="text-emerald-400 font-bold">1,500.00 CTC</span>
+                        </div>
+                        <button onclick="switchTab('autoSettlement')" class="w-full py-2 bg-darkBg/60 hover:bg-borderCol border border-borderCol text-cyan-300 text-xs rounded-xl transition">Open Auto-Settlement Tab</button>
+                    </div>
+
+                    <div class="glass-panel rounded-3xl p-6 space-y-4 shadow-2xl border border-cyan-500/30">
+                        <div class="flex items-center justify-between border-b border-borderCol pb-3">
+                            <h4 class="text-sm font-bold text-white flex items-center space-x-2">
+                                <i class="fa-solid fa-server text-cyan-400"></i>
+                                <span>Validator Mesh Health Snapshot</span>
+                            </h4>
+                            <span class="px-2 py-0.5 rounded-full bg-cyan-500/15 text-cyan-400 text-[10px] font-bold">12/12 ONLINE</span>
+                        </div>
+                        <p class="text-xs text-slate-300">Live consensus heartbeat from Creditcoin validator nodes ensuring zero-downtime attestation routing.</p>
+                        <div class="p-3 bg-darkBg/80 rounded-xl border border-borderCol flex justify-between items-center text-xs font-mono">
+                            <span class="text-slate-400">Average Mesh Latency:</span>
+                            <span class="text-cyan-400 font-bold">13.6ms</span>
+                        </div>
+                        <button onclick="switchTab('nodeHealthMap')" class="w-full py-2 bg-darkBg/60 hover:bg-borderCol border border-borderCol text-cyan-300 text-xs rounded-xl transition">Open Node Health Map</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ALL OTHER TABS -->
+            <div id="tab-logs" class="space-y-6 tab-pane hidden">
+                <div class="glass-panel rounded-3xl p-6 space-y-4 shadow-2xl border border-borderCol">
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+                        <h3 class="text-sm font-bold text-white flex items-center space-x-2"><i class="fa-solid fa-list-check text-cyan-400"></i><span>Live Cross-Chain Proof & Event Stream</span></h3>
+                        <button onclick="triggerAction('Refreshing streaming proof feed...')" class="px-3.5 py-2 bg-darkBg/60 border border-borderCol text-xs text-cyan-300 rounded-xl hover:bg-borderCol transition">Stream Live Proofs</button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs min-w-[500px]">
+                            <thead>
+                                <tr class="border-b border-borderCol text-slate-400">
+                                    <th class="pb-3">Tx Hash</th>
+                                    <th class="pb-3">Source Chain</th>
+                                    <th class="pb-3">Protocol</th>
+                                    <th class="pb-3">Gas Used</th>
+                                    <th class="pb-3 text-right">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-borderCol/50 text-slate-300 font-mono">
+                                <tr><td class="py-3 text-cyan-400">0x8f9c...31a2</td><td class="py-3">Ethereum</td><td class="py-3">Aave v3</td><td class="py-3">45,210</td><td class="py-3 text-right"><span class="px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 font-sans font-semibold border border-emerald-500/20">Verified</span></td></tr>
+                                <tr><td class="py-3 text-cyan-400">0x42b1...90fe</td><td class="py-3">Arbitrum</td><td class="py-3">Morpho Blue</td><td class="py-3">38,100</td><td class="py-3 text-right"><span class="px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 font-sans font-semibold border border-emerald-500/20">Verified</span></td></tr>
+                                <tr><td class="py-3 text-cyan-400">0x9c12...44cc</td><td class="py-3">Ethereum</td><td class="py-3">Spark</td><td class="py-3">51,900</td><td class="py-3 text-right"><span class="px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 font-sans font-semibold border border-emerald-500/20">Verified</span></td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div id="tab-registry" class="space-y-6 tab-pane hidden">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="glass-panel rounded-3xl p-6 space-y-4 shadow-2xl border border-borderCol">
+                        <h3 class="text-sm font-bold text-white"><i class="fa-solid fa-scale-balanced text-amber-400 mr-2"></i>Live Collateral Health Matrix</h3>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-xs font-mono min-w-[300px]">
+                                <thead><tr class="border-b border-borderCol text-slate-400"><th class="pb-3">Protocol</th><th class="pb-3">Asset</th><th class="pb-3 text-right">Health Factor</th></tr></thead>
+                                <tbody class="divide-y divide-borderCol/50 text-slate-300">
+                                    <tr><td class="py-3 font-sans text-white">Aave v3</td><td class="py-3">WBTC</td><td class="py-3 text-right text-emerald-400 font-bold">2.41 (Safe)</td></tr>
+                                    <tr><td class="py-3 font-sans text-white">Morpho Blue</td><td class="py-3">USDC</td><td class="py-3 text-right text-amber-400 font-bold">1.18 (Warning)</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <button onclick="triggerAction('Revoking cross-chain lien delegation on completed loan...')" class="w-full py-2.5 bg-darkBg/60 hover:bg-borderCol border border-borderCol text-cyan-300 text-xs font-semibold rounded-xl transition">Revoke Lien Delegation</button>
+                    </div>
+                    <div class="glass-panel rounded-3xl p-6 space-y-4 flex flex-col justify-between shadow-2xl border border-borderCol">
+                        <div>
+                            <h3 class="text-sm font-bold text-white mb-2"><i class="fa-solid fa-triangle-exclamation text-red-400 mr-2"></i>UCC-9 Double-Claim Defense</h3>
+                            <p class="text-xs text-slate-300 mb-4">Singleton ledger architecture prevents multiple protocols from executing claims on the same underlying collateral asset simultaneously.</p>
+                            <div class="bg-darkBg/80 p-3.5 rounded-xl border border-borderCol font-mono text-[11px] text-emerald-400 space-y-1">
+                                <div>> Primary Lien Registered: 0x98...12</div>
+                                <div>> Secondary Claim: REJECTED (Conflict)</div>
+                            </div>
+                        </div>
+                        <button onclick="triggerAction('Forcing manual position liquidation via Guardian override...')" class="w-full py-2.5 bg-red-950/40 hover:bg-red-900/40 border border-red-500/30 text-red-300 text-xs font-semibold rounded-xl transition">Force Liquidate Position</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="tab-agents" class="space-y-6 tab-pane hidden">
+                <div class="glass-panel rounded-3xl p-6 space-y-4 shadow-2xl border border-borderCol">
+                    <h3 class="text-sm font-bold text-white flex items-center space-x-2"><i class="fa-solid fa-bolt-lightning text-purple-400"></i><span>Autonomous Slashing & Emergency Controls</span></h3>
+                    <p class="text-xs text-slate-300">Manage automated insurance pools and operator bond conditions in real-time.</p>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
+                        <button onclick="triggerAction('Simulating operator slashing event... Bond confiscated!')" class="p-4 bg-darkBg/60 hover:bg-borderCol border border-borderCol rounded-2xl text-left space-y-2 transition">
+                            <div class="text-cyan-400 font-bold text-xs">Simulate Slashing</div>
+                            <div class="text-[11px] text-slate-400">Test pro-rata payout mechanism.</div>
+                        </button>
+                        <button onclick="triggerAction('Emergency Kill-Switch activated! All automation halted.')" class="p-4 bg-red-950/30 hover:bg-red-900/40 border border-red-500/30 rounded-2xl text-left space-y-2 transition">
+                            <div class="text-red-400 font-bold text-xs">Emergency Kill-Switch</div>
+                            <div class="text-[11px] text-slate-400">Halt all background bots safely.</div>
+                        </button>
+                        <button onclick="triggerAction('Simulating gas spike network congestion... Precompile routing active.')" class="p-4 bg-darkBg/60 hover:bg-borderCol border border-borderCol rounded-2xl text-left space-y-2 transition">
+                            <div class="text-amber-400 font-bold text-xs">Gas Spike Test</div>
+                            <div class="text-[11px] text-slate-400">Verify 15s execution under load.</div>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="tab-staking" class="space-y-6 tab-pane hidden">
+                <div class="glass-panel rounded-3xl p-6 space-y-4 shadow-2xl border border-borderCol">
+                    <h3 class="text-sm font-bold text-white flex items-center space-x-2"><i class="fa-solid fa-coins text-emerald-400"></i><span>Operator Staking & Yield Calculator</span></h3>
+                    <p class="text-xs text-slate-300">Bond Creditcoin (CTC) to participate in cross-chain attestations and earn protocol rewards.</p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
+                        <div class="space-y-3 bg-darkBg/60 p-4 rounded-2xl border border-borderCol">
+                            <label class="block text-xs text-slate-200">Bond Amount (CTC): <span id="stakingVal" class="text-cyan-400 font-bold">10,000 CTC</span></label>
+                            <input type="range" min="1000" max="100000" step="1000" value="10000" class="w-full accent-cyan-500" oninput="document.getElementById('stakingVal').innerText = this.value + ' CTC'; document.getElementById('calcYield').innerText = '~' + (this.value * 0.14).toFixed(0) + ' CTC / yr'">
+                            <div class="text-[11px] text-slate-400 flex justify-between"><span>Estimated APY: <strong class="text-emerald-400">14.2%</strong></span><span>Est. Yield: <strong id="calcYield" class="text-emerald-400">~1,420 CTC / yr</strong></span></div>
+                        </div>
+                        <div class="flex flex-col justify-center space-y-3">
+                            <button onclick="triggerAction('Claiming operator rewards successfully to wallet!')" class="w-full py-3 bg-emerald-600/20 hover:bg-emerald-600/30 border border-emerald-500/40 text-emerald-300 text-xs font-semibold rounded-xl transition shadow-md">Claim Operator Rewards</button>
+                            <button onclick="triggerAction('Bonding CTC tokens to operator pool...')" class="w-full py-3 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white text-xs font-bold rounded-xl shadow-lg shadow-cyan-500/20 transition border border-cyan-400/30">Stake & Bond Operator Node</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="tab-latency" class="space-y-6 tab-pane hidden">
+                <div class="glass-panel rounded-3xl p-6 space-y-4 shadow-2xl border border-borderCol">
+                    <h3 class="text-sm font-bold text-white flex items-center space-x-2"><i class="fa-solid fa-gauge-high text-cyan-400"></i><span>Network Speed & Latency Comparison</span></h3>
+                    <p class="text-xs text-slate-300">Comparing Aegis + Creditcoin precompile performance against traditional cross-chain bridge architectures.</p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                        <div class="p-4 bg-darkBg/60 border border-borderCol rounded-2xl space-y-2">
+                            <div class="text-xs text-slate-400">Traditional Cross-Chain Bridges</div>
+                            <div class="text-xl sm:text-2xl font-black text-red-400">20 - 45 Minutes</div>
+                            <div class="text-[11px] text-slate-500">Requires multi-sig validation & social consensus blocks.</div>
+                        </div>
+                        <div class="p-4 bg-darkBg/80 border border-cyan-500/40 rounded-2xl space-y-2 bg-cyan-950/20 shadow-xl">
+                            <div class="text-xs text-cyan-300 font-semibold">Aegis + Attestcoin Precompile (0x0FD2)</div>
+                            <div class="text-xl sm:text-2xl font-black text-emerald-400">~15 Seconds</div>
+                            <div class="text-[11px] text-slate-300">Direct cryptographic verification via Creditcoin network.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="tab-zkInspector" class="space-y-6 tab-pane hidden">
+                <div class="glass-panel rounded-3xl p-6 space-y-4 shadow-2xl border border-borderCol">
+                    <h3 class="text-sm font-bold text-white flex items-center space-x-2"><i class="fa-solid fa-fingerprint text-cyan-400"></i><span>Cryptographic ZK-Proof Inspector</span></h3>
+                    <p class="text-xs text-slate-300">Examine raw Merkle roots and state transition proofs verified via precompile 0x0FD2.</p>
+                    <div class="bg-darkBg/80 p-4 rounded-2xl border border-borderCol font-mono text-xs space-y-2 text-slate-300 shadow-inner overflow-x-auto">
+                        <div><span class="text-slate-500">Proof Hash:</span> <span class="text-cyan-400">0x7f83b4c92a10e...881f2</span></div>
+                        <div><span class="text-slate-500">Merkle Root:</span> <span class="text-emerald-400">0x9912a...0b41c</span></div>
+                        <div><span class="text-slate-500">Precompile Slot:</span> <span class="text-amber-400">0x0FD2 (Verified & Settled)</span></div>
+                    </div>
+                    <button onclick="triggerAction('Re-verifying ZK-Proof cryptographic integrity... Success!')" class="w-full py-2.5 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white text-xs font-bold rounded-xl shadow-lg shadow-cyan-500/20 transition border border-cyan-400/30">Re-verify Proof Cryptography</button>
+                </div>
+            </div>
+
+            <div id="tab-multichainBridge" class="space-y-6 tab-pane hidden">
+                <div class="glass-panel rounded-3xl p-6 space-y-4 shadow-2xl border border-borderCol">
+                    <h3 class="text-sm font-bold text-white flex items-center space-x-2"><i class="fa-solid fa-network-wired text-emerald-400"></i><span>Multi-Chain Bridge Sync Module</span></h3>
+                    <p class="text-xs text-slate-300">Synchronize asset liquidity states instantly across supported chains using Creditcoin precompiled relay nodes.</p>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
+                        <div class="p-4 bg-darkBg/60 border border-borderCol rounded-2xl space-y-2">
+                            <span class="text-[10px] text-slate-400 uppercase">Ethereum Mainnet</span>
+                            <div class="text-sm font-bold text-white">Status: Connected</div>
+                            <button onclick="triggerAction('Syncing Ethereum bridge state hash... Complete.')" class="w-full mt-2 py-2 bg-darkBg/60 hover:bg-borderCol border border-borderCol text-cyan-300 text-xs rounded-xl">Force Sync</button>
+                        </div>
+                        <div class="p-4 bg-darkBg/60 border border-borderCol rounded-2xl space-y-2">
+                            <span class="text-[10px] text-slate-400 uppercase">Arbitrum One</span>
+                            <div class="text-sm font-bold text-white">Status: Active</div>
+                            <button onclick="triggerAction('Syncing Arbitrum rollup state proof... Complete.')" class="w-full mt-2 py-2 bg-darkBg/60 hover:bg-borderCol border border-borderCol text-cyan-300 text-xs rounded-xl">Force Sync</button>
+                        </div>
+                        <div class="p-4 bg-darkBg/60 border border-borderCol rounded-2xl space-y-2">
+                            <span class="text-[10px] text-slate-400 uppercase">Creditcoin L1</span>
+                            <div class="text-sm font-bold text-emerald-400">Status: Precompile Ready</div>
+                            <button onclick="triggerAction('Creditcoin state anchor validated successfully!')" class="w-full mt-2 py-2 bg-darkBg/60 hover:bg-borderCol border border-borderCol text-emerald-300 text-xs rounded-xl">Validate Anchor</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="tab-collateralVault" class="space-y-6 tab-pane hidden">
+                <div class="glass-panel rounded-3xl p-6 space-y-4 shadow-2xl border border-borderCol">
+                    <h3 class="text-sm font-bold text-white flex items-center space-x-2"><i class="fa-solid fa-vault text-amber-400"></i><span>Collateral Vault Manager</span></h3>
+                    <p class="text-xs text-slate-300">Manage multi-protocol lockboxes, deposit additional assets, or withdraw excess collateral securely.</p>
+                    <div class="space-y-4 pt-2">
+                        <div class="p-4 bg-darkBg/60 rounded-2xl border border-borderCol flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                            <div>
+                                <span class="text-xs text-white font-bold block">Vault #492 - WBTC Collateral Lock</span>
+                                <span class="text-[10px] text-slate-400">Locked Amount: 2.45 WBTC ($142,000)</span>
+                            </div>
+                            <button onclick="triggerAction('Withdrawing surplus collateral from vault #492...')" class="px-4 py-2 bg-amber-600/20 hover:bg-amber-600/30 border border-amber-500/40 text-amber-300 text-xs font-semibold rounded-xl shadow-md">Withdraw Surplus</button>
+                        </div>
+                        <div class="p-4 bg-darkBg/60 rounded-2xl border border-borderCol flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                            <div>
+                                <span class="text-xs text-white font-bold block">Vault #812 - USDC Liquidity Reserve</span>
+                                <span class="text-[10px] text-slate-400">Locked Amount: 50,000 USDC ($50,000)</span>
+                            </div>
+                            <button onclick="triggerAction('Depositing emergency buffer into vault #812...')" class="px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-semibold rounded-xl shadow-md">Deposit Buffer</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="tab-governanceDao" class="space-y-6 tab-pane hidden">
+                <div class="glass-panel rounded-3xl p-6 space-y-4 shadow-2xl border border-borderCol">
+                    <h3 class="text-sm font-bold text-white flex items-center space-x-2"><i class="fa-solid fa-landmark text-purple-400"></i><span>Governance & Protocol DAO Proposals</span></h3>
+                    <p class="text-xs text-slate-300">Vote on precompile updates, fee adjustments, and collateral listing parameters using bonded CTC power.</p>
+                    <div class="space-y-3 pt-2">
+                        <div class="p-4 bg-darkBg/60 rounded-2xl border border-borderCol space-y-2">
+                            <div class="flex flex-col sm:flex-row justify-between text-xs font-bold text-white gap-1"><span>SIP-14: Enable Cross-Chain Morpho Blue Vaults</span><span class="text-emerald-400">Passed (88%)</span></div>
+                            <p class="text-[11px] text-slate-400">Extends single-lien protection constraints to Morpho Blue isolated credit markets.</p>
+                            <button onclick="triggerAction('Casting proxy vote for SIP-14... Success!')" class="px-3 py-1.5 bg-purple-600/20 border border-purple-500/40 text-purple-300 text-xs rounded-lg shadow-md">Cast Vote</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="tab-analyticsHub" class="space-y-6 tab-pane hidden">
+                <div class="glass-panel rounded-3xl p-6 space-y-4 shadow-2xl border border-borderCol">
+                    <h3 class="text-sm font-bold text-white flex items-center space-x-2"><i class="fa-solid fa-chart-line text-cyan-400"></i><span>Advanced Analytics Hub & Metrics</span></h3>
+                    <p class="text-xs text-slate-300">Comprehensive telemetry on protocol throughput, default rates, and historical gas optimizations.</p>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
+                        <div class="p-4 bg-darkBg/60 rounded-2xl border border-borderCol shadow-inner">
+                            <span class="text-[10px] text-slate-400 uppercase block">Average Gas Savings</span>
+                            <span class="text-xl font-black text-emerald-400">42.8%</span>
+                        </div>
+                        <div class="p-4 bg-darkBg/60 rounded-2xl border border-borderCol shadow-inner">
+                            <span class="text-[10px] text-slate-400 uppercase block">Active Borrowers Protected</span>
+                            <span class="text-xl font-black text-cyan-400">1,482</span>
+                        </div>
+                        <div class="p-4 bg-darkBg/60 rounded-2xl border border-borderCol shadow-inner">
+                            <span class="text-[10px] text-slate-400 uppercase block">Protocol Health Index</span>
+                            <span class="text-xl font-black text-amber-400">99.98%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="tab-verifyFirst" class="space-y-6 tab-pane hidden">
+                <div class="glass-panel rounded-3xl p-6 space-y-6 shadow-2xl border border-cyan-500/30">
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-borderCol pb-4 gap-2">
+                        <div>
+                            <span class="text-[10px] font-extrabold uppercase tracking-widest text-cyan-400">AttestAI Architecture</span>
+                            <h3 class="text-base sm:text-lg font-black text-white flex items-center space-x-2 mt-1">
+                                <i class="fa-solid fa-shield-check text-cyan-400"></i>
+                                <span>Verify First. Decide Second. (In-Browser Trustless Audit)</span>
+                            </h3>
+                        </div>
+                        <span class="px-3 py-1 rounded-full bg-cyan-500/15 text-cyan-400 text-xs font-bold border border-cyan-500/30">PROOF-AWARE AGENT</span>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="bg-darkBg/80 p-5 rounded-2xl border border-borderCol space-y-3">
+                            <span class="text-xs text-slate-400 uppercase tracking-wider block font-semibold">Live Contract Audit Input</span>
+                            <div class="space-y-2">
+                                <input type="text" id="auditContractInput" value="0x89Fd...32e4" class="w-full bg-cardBg border border-borderCol rounded-xl px-3 py-2 text-xs font-mono text-white focus:outline-none focus:border-cyan-500">
+                                <button onclick="runTrustlessAudit()" class="w-full py-2.5 bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-bold rounded-xl shadow-md transition">Run Trustless On-Chain Audit</button>
+                            </div>
+                            <div id="auditResultBox" class="text-xs text-slate-300 space-y-1 font-mono pt-2">
+                                <div>Status: <span class="text-emerald-400 font-bold">Ready for verification</span></div>
+                            </div>
+                        </div>
+                        <div class="bg-darkBg/80 p-5 rounded-2xl border border-borderCol space-y-3">
+                            <span class="text-xs text-slate-400 uppercase tracking-wider block font-semibold">Deterministic Guardrails</span>
+                            <div class="space-y-2 text-xs font-mono">
+                                <div class="flex items-center space-x-2 text-emerald-400"><i class="fa-solid fa-check"></i><span>Source proof cryptographic check passed</span></div>
+                                <div class="flex items-center space-x-2 text-emerald-400"><i class="fa-solid fa-check"></i><span>Minimum liquidity threshold enforced</span></div>
+                                <div class="flex items-center space-x-2 text-emerald-400"><i class="fa-solid fa-check"></i><span>Volatility boundary verified</span></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-darkBg/90 p-5 rounded-2xl border border-borderCol space-y-3">
+                        <span class="text-xs text-slate-400 uppercase tracking-wider block font-semibold">Proof Inspector & Decision Provenance</span>
+                        <div class="flex flex-wrap gap-2 text-xs font-mono">
+                            <span class="px-3 py-1.5 rounded-xl bg-cyan-500/10 text-cyan-300 border border-cyan-500/20">1. Source Event Emitted</span>
+                            <span class="text-slate-500 self-center">→</span>
+                            <span class="px-3 py-1.5 rounded-xl bg-cyan-500/10 text-cyan-300 border border-cyan-500/20">2. Attestation Available</span>
+                            <span class="text-slate-500 self-center">→</span>
+                            <span class="px-3 py-1.5 rounded-xl bg-cyan-500/10 text-cyan-300 border border-cyan-500/20">3. USC Proof Accepted</span>
+                            <span class="text-slate-500 self-center">→</span>
+                            <span class="px-3 py-1.5 rounded-xl bg-emerald-500/10 text-emerald-300 border border-emerald-500/20">4. Guardrail Verified</span>
+                        </div>
+                        <button onclick="triggerAction('Simulating cryptographic verification handshake... Verified successfully!')" class="w-full mt-2 py-3 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white text-xs font-bold rounded-xl shadow-lg transition">Run Full Proof Pipeline Check</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="tab-autoSettlement" class="space-y-6 tab-pane hidden">
+                <div class="glass-panel rounded-3xl p-6 space-y-6 shadow-2xl border border-emerald-500/30">
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-borderCol pb-4 gap-2">
+                        <div>
+                            <span class="text-[10px] font-extrabold uppercase tracking-widest text-emerald-400">Instant House Balance & Escrow Release</span>
+                            <h3 class="text-base sm:text-lg font-black text-white flex items-center space-x-2 mt-1">
+                                <i class="fa-solid fa-bolt text-emerald-400"></i>
+                                <span>Autonomous Settlement & Payout Engine</span>
+                            </h3>
+                        </div>
+                        <span class="px-3 py-1 rounded-full bg-emerald-500/15 text-emerald-400 text-xs font-bold border border-emerald-500/30">GAS-FREE PAYOUT</span>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="p-4 bg-darkBg/80 rounded-2xl border border-borderCol space-y-2">
+                            <span class="text-xs text-slate-400 block uppercase">Trigger Status</span>
+                            <div class="text-base font-bold text-emerald-400">Condition Met (Proof Verified)</div>
+                            <p class="text-[11px] text-slate-500">Event verified directly from public record hash.</p>
+                        </div>
+                        <div class="p-4 bg-darkBg/80 rounded-2xl border border-borderCol space-y-2">
+                            <span class="text-xs text-slate-400 block uppercase">Merkle Proof Pipeline</span>
+                            <div class="text-base font-bold text-cyan-400">Continuity Verified</div>
+                            <p class="text-[11px] text-slate-500">Inclusion proof generated via Attestcoin SDK.</p>
+                        </div>
+                        <div class="p-4 bg-darkBg/80 rounded-2xl border border-borderCol space-y-2">
+                            <span class="text-xs text-slate-400 block uppercase">Instant Payout Balance</span>
+                            <div id="houseBalanceDisplay" class="text-base font-bold text-emerald-400">1,500.00 CTC</div>
+                            <p class="text-[11px] text-slate-500">Credited instantly without gas fee signing.</p>
+                        </div>
+                    </div>
+                    <div class="p-5 bg-darkBg/90 rounded-2xl border border-borderCol space-y-3">
+                        <span class="text-xs text-slate-300 font-bold block">Execute Gas-Free Settlement Payout</span>
+                        <p class="text-xs text-slate-400">Trigger smart contract verification to test instant cross-chain payout via precompile 0x0FD2.</p>
+                        <button onclick="executeInstantAutoPayout()" class="w-full py-3 bg-gradient-to-r from-emerald-600 to-cyan-600 hover:from-emerald-500 hover:to-blue-500 text-white text-xs font-bold rounded-xl shadow-lg transition">Trigger Instant Settlement & Payout</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- NODE HEALTH MAP -->
+            <div id="tab-nodeHealthMap" class="space-y-6 tab-pane hidden">
+                <div class="glass-panel rounded-3xl p-6 space-y-6 shadow-2xl border border-cyan-500/30">
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-borderCol pb-4 gap-2">
+                        <div>
+                            <span class="text-[10px] font-extrabold uppercase tracking-widest text-cyan-400">Creditcoin Validator Infrastructure</span>
+                            <h3 class="text-base sm:text-lg font-black text-white flex items-center space-x-2 mt-1">
+                                <i class="fa-solid fa-server text-cyan-400"></i>
+                                <span>Node Health & Validator Mesh Status</span>
+                            </h3>
+                        </div>
+                        <span class="px-3 py-1 rounded-full bg-cyan-500/15 text-cyan-400 text-xs font-bold border border-cyan-500/30">12 / 12 NODES ONLINE</span>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="p-4 bg-darkBg/80 rounded-2xl border border-borderCol space-y-2">
+                            <span class="text-xs text-slate-400 block uppercase">Validator Node #1 (US-East)</span>
+                            <div class="text-base font-bold text-emerald-400">Active (Latency: 9ms)</div>
+                            <p class="text-[11px] text-slate-500">Uptime: 99.99% • Precompile 0x0FD2 Synced</p>
+                        </div>
+                        <div class="p-4 bg-darkBg/80 rounded-2xl border border-borderCol space-y-2">
+                            <span class="text-xs text-slate-400 block uppercase">Validator Node #2 (EU-Central)</span>
+                            <div class="text-base font-bold text-emerald-400">Active (Latency: 14ms)</div>
+                            <p class="text-[11px] text-slate-500">Uptime: 100% • Precompile 0x0FD2 Synced</p>
+                        </div>
+                        <div class="p-4 bg-darkBg/80 rounded-2xl border border-borderCol space-y-2">
+                            <span class="text-xs text-slate-400 block uppercase">Validator Node #3 (AP-South)</span>
+                            <div class="text-base font-bold text-emerald-400">Active (Latency: 18ms)</div>
+                            <p class="text-[11px] text-slate-500">Uptime: 99.95% • Precompile 0x0FD2 Synced</p>
+                        </div>
+                    </div>
+                    <button onclick="triggerAction('Pinging all validator nodes for heartbeat verification... All healthy!')" class="w-full py-3 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white text-xs font-bold rounded-xl shadow-lg transition">Run Validator Mesh Heartbeat Test</button>
+                </div>
+            </div>
+
+            <!-- FLASH LOAN AUDITOR -->
+            <div id="tab-flashLoanAuditor" class="space-y-6 tab-pane hidden">
+                <div class="glass-panel rounded-3xl p-6 space-y-6 shadow-2xl border border-amber-500/30">
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-borderCol pb-4 gap-2">
+                        <div>
+                            <span class="text-[10px] font-extrabold uppercase tracking-widest text-amber-400">Security Guardrail</span>
+                            <h3 class="text-base sm:text-lg font-black text-white flex items-center space-x-2 mt-1">
+                                <i class="fa-solid fa-triangle-exclamation text-amber-400"></i>
+                                <span>Flash Loan & Reentrancy Risk Auditor</span>
+                            </h3>
+                        </div>
+                        <span class="px-3 py-1 rounded-full bg-amber-500/15 text-amber-400 text-xs font-bold border border-amber-500/30">SECURE SHIELD</span>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="p-5 bg-darkBg/80 rounded-2xl border border-borderCol space-y-3">
+                            <span class="text-xs text-slate-400 uppercase tracking-wider block font-semibold">Simulate Flash Loan Vector</span>
+                            <div class="space-y-2">
+                                <input type="text" value="0xProtocolLendingPoolV3" class="w-full bg-cardBg border border-borderCol rounded-xl px-3 py-2 text-xs font-mono text-white focus:outline-none focus:border-amber-500">
+                                <button onclick="triggerAction('Simulating multi-hop flash loan attack vector... Blocked by Aegis Single-Lien Precompile!')" class="w-full py-2.5 bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold rounded-xl shadow-md transition">Simulate Attack & Test Defense</button>
+                            </div>
+                        </div>
+                        <div class="p-5 bg-darkBg/80 rounded-2xl border border-borderCol space-y-3">
+                            <span class="text-xs text-slate-400 uppercase tracking-wider block font-semibold">Active Protections</span>
+                            <div class="space-y-2 text-xs font-mono text-emerald-400">
+                                <div><i class="fa-solid fa-check mr-2"></i> Atomic Reentrancy Lock Active</div>
+                                <div><i class="fa-solid fa-check mr-2"></i> Cross-Chain Double Spend Guard</div>
+                                <div><i class="fa-solid fa-check mr-2"></i> Precompile State Isolation Enabled</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- WHALE RADAR -->
+            <div id="tab-whaleRadar" class="space-y-6 tab-pane hidden">
+                <div class="glass-panel rounded-3xl p-6 space-y-6 shadow-2xl border border-cyan-500/30">
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-borderCol pb-4 gap-2">
+                        <div>
+                            <span class="text-[10px] font-extrabold uppercase tracking-widest text-cyan-400">On-Chain Intelligence</span>
+                            <h3 class="text-base sm:text-lg font-black text-white flex items-center space-x-2 mt-1">
+                                <i class="fa-solid fa-water text-cyan-400"></i>
+                                <span>Whale Liquidation & Position Radar</span>
+                            </h3>
+                        </div>
+                        <span class="px-3 py-1 rounded-full bg-cyan-500/15 text-cyan-400 text-xs font-bold border border-cyan-500/30">LIVE SCANNING</span>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs min-w-[550px]">
+                            <thead>
+                                <tr class="border-b border-borderCol text-slate-400">
+                                    <th class="pb-3">Whale Address</th>
+                                    <th class="pb-3">Collateral</th>
+                                    <th class="pb-3">Debt Position</th>
+                                    <th class="pb-3">Health Factor</th>
+                                    <th class="pb-3 text-right">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-borderCol/50 text-slate-300 font-mono">
+                                <tr>
+                                    <td class="py-3 text-cyan-400">0x3fA9...8121</td>
+                                    <td class="py-3">1,250 ETH ($4.1M)</td>
+                                    <td class="py-3">2,800,000 USDC</td>
+                                    <td class="py-3 text-emerald-400 font-bold">1.24 (Stable)</td>
+                                    <td class="py-3 text-right"><button onclick="triggerAction('Subscribing to whale alert feed...')" class="px-2.5 py-1 bg-cyan-600/20 text-cyan-300 rounded-lg">Track</button></td>
+                                </tr>
+                                <tr>
+                                    <td class="py-3 text-cyan-400">0x8B12...99ca</td>
+                                    <td class="py-3">450 WBTC ($29.5M)</td>
+                                    <td class="py-3">18,500,000 USDT</td>
+                                    <td class="py-3 text-amber-400 font-bold">1.04 (At Risk)</td>
+                                    <td class="py-3 text-right"><button onclick="triggerAction('Simulating precompile protective intervention...')" class="px-2.5 py-1 bg-amber-600/20 text-amber-300 rounded-lg">Protect</button></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- GAS ARBITRAGE -->
+            <div id="tab-gasArbitrage" class="space-y-6 tab-pane hidden">
+                <div class="glass-panel rounded-3xl p-6 space-y-6 shadow-2xl border border-emerald-500/30">
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-borderCol pb-4 gap-2">
+                        <div>
+                            <span class="text-[10px] font-extrabold uppercase tracking-widest text-emerald-400">Cross-Chain Efficiency</span>
+                            <h3 class="text-base sm:text-lg font-black text-white flex items-center space-x-2 mt-1">
+                                <i class="fa-solid fa-scale-unbalanced-flipped text-emerald-400"></i>
+                                <span>Gas Arbitrage & Route Matrix</span>
+                            </h3>
+                        </div>
+                        <span class="px-3 py-1 rounded-full bg-emerald-500/15 text-emerald-400 text-xs font-bold border border-emerald-500/30">OPTIMAL ROUTE</span>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="p-4 bg-darkBg/80 rounded-2xl border border-borderCol space-y-2">
+                            <span class="text-xs text-slate-400 uppercase">Ethereum Direct</span>
+                            <div class="text-base font-bold text-red-400">24.5 Gwei ($18.40 fee)</div>
+                            <button onclick="triggerAction('Selected Ethereum Direct Route')" class="w-full mt-2 py-1.5 bg-darkBg/60 text-slate-300 text-xs rounded-xl border border-borderCol">Select Route</button>
+                        </div>
+                        <div class="p-4 bg-darkBg/80 rounded-2xl border border-borderCol space-y-2">
+                            <span class="text-xs text-slate-400 uppercase">Arbitrum L2 Rollup</span>
+                            <div class="text-base font-bold text-amber-400">0.12 Gwei ($0.15 fee)</div>
+                            <button onclick="triggerAction('Selected Arbitrum L2 Route')" class="w-full mt-2 py-1.5 bg-darkBg/60 text-slate-300 text-xs rounded-xl border border-borderCol">Select Route</button>
+                        </div>
+                        <div class="p-4 bg-cyan-950/20 rounded-2xl border border-cyan-500/40 space-y-2 shadow-xl">
+                            <span class="text-xs text-cyan-300 uppercase font-semibold">Creditcoin Precompile 0x0FD2</span>
+                            <div class="text-base font-bold text-emerald-400">Zero-Gas Relay ($0.00 fee)</div>
+                            <button onclick="triggerAction('Creditcoin Precompile Route Activated!')" class="w-full mt-2 py-1.5 bg-cyan-600 text-white text-xs font-bold rounded-xl shadow-md">Instant Activate</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECURITY SANDBOX -->
+            <div id="tab-securitySandbox" class="space-y-6 tab-pane hidden">
+                <div class="glass-panel rounded-3xl p-6 space-y-6 shadow-2xl border border-purple-500/30">
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-borderCol pb-4 gap-2">
+                        <div>
+                            <span class="text-[10px] font-extrabold uppercase tracking-widest text-purple-400">Developer Playground</span>
+                            <h3 class="text-base sm:text-lg font-black text-white flex items-center space-x-2 mt-1">
+                                <i class="fa-solid fa-laptop-code text-purple-400"></i>
+                                <span>Precompile 0x0FD2 Custom Sandbox</span>
+                            </h3>
+                        </div>
+                        <span class="px-3 py-1 rounded-full bg-purple-500/15 text-purple-400 text-xs font-bold border border-purple-500/30">TESTNET v1.2</span>
+                    </div>
+                    <div class="space-y-3">
+                        <label class="block text-xs text-slate-300 font-semibold">Custom Precompile Payload Call (Hex / Calldata):</label>
+                        <textarea rows="3" class="w-full bg-cardBg border border-borderCol rounded-xl p-3 text-xs font-mono text-cyan-300 focus:outline-none focus:border-purple-500">0x0fd2849120000000000000000000000089fd32e400000000000000000000000000000001</textarea>
+                        <button onclick="triggerAction('Executing custom precompile payload... Execution successful in 12ms!')" class="px-5 py-2.5 bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold rounded-xl shadow-md transition">Run Test Sandbox Execution</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TELEMETRY GRAPH -->
+            <div id="tab-telemetryGraph" class="space-y-6 tab-pane hidden">
+                <div class="glass-panel rounded-3xl p-6 space-y-6 shadow-2xl border border-amber-500/30">
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-borderCol pb-4 gap-2">
+                        <div>
+                            <span class="text-[10px] font-extrabold uppercase tracking-widest text-amber-400">Network Performance</span>
+                            <h3 class="text-base sm:text-lg font-black text-white flex items-center space-x-2 mt-1">
+                                <i class="fa-solid fa-chart-area text-amber-400"></i>
+                                <span>Node Telemetry & Throughput Graph</span>
+                            </h3>
+                        </div>
+                        <span class="px-3 py-1 rounded-full bg-amber-500/15 text-amber-400 text-xs font-bold border border-amber-500/30">REAL-TIME FEED</span>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div class="p-4 bg-darkBg/80 rounded-2xl border border-borderCol space-y-2">
+                            <span class="text-xs text-slate-400 block">Peak TPS (Transactions Per Sec)</span>
+                            <span class="text-2xl font-black text-cyan-400">4,850 TPS</span>
+                            <div class="text-[11px] text-emerald-400">↑ 14% higher than average benchmark</div>
+                        </div>
+                        <div class="p-4 bg-darkBg/80 rounded-2xl border border-borderCol space-y-2">
+                            <span class="text-xs text-slate-400 block">Consensus Finality Time</span>
+                            <span class="text-2xl font-black text-emerald-400">14.8 Seconds</span>
+                            <div class="text-[11px] text-emerald-400">100% block verification success rate</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- COMPLIANCE EXPORT -->
+            <div id="tab-complianceExport" class="space-y-6 tab-pane hidden">
+                <div class="glass-panel rounded-3xl p-6 space-y-6 shadow-2xl border border-emerald-500/30">
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-borderCol pb-4 gap-2">
+                        <div>
+                            <span class="text-[10px] font-extrabold uppercase tracking-widest text-emerald-400">Regulatory Suite</span>
+                            <h3 class="text-base sm:text-lg font-black text-white flex items-center space-x-2 mt-1">
+                                <i class="fa-solid fa-file-invoice-dollar text-emerald-400"></i>
+                                <span>Compliance & Tax Document Export</span>
+                            </h3>
+                        </div>
+                        <span class="px-3 py-1 rounded-full bg-emerald-500/15 text-emerald-400 text-xs font-bold border border-emerald-500/30">INSTANT GENERATOR</span>
+                    </div>
+                    <p class="text-xs text-slate-300">Generate certified on-chain activity statements, UCC-9 lien releases, and tax deduction reports instantly.</p>
+                    <div class="flex flex-wrap gap-3">
+                        <button onclick="triggerAction('Generating UCC-9 Lien Certificate PDF...')" class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl shadow-md transition flex items-center space-x-2">
+                            <i class="fa-solid fa-file-pdf"></i>
+                            <span>Download UCC-9 Certificate</span>
+                        </button>
+                        <button onclick="triggerAction('Exporting annual tax yield report (CSV)...')" class="px-4 py-2.5 bg-darkBg/80 hover:bg-borderCol border border-borderCol text-cyan-300 text-xs font-semibold rounded-xl transition flex items-center space-x-2">
+                            <i class="fa-solid fa-file-csv"></i>
+                            <span>Export Staking Tax CSV</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI MEV SHIELD -->
+            <div id="tab-aiMevShield" class="space-y-6 tab-pane hidden">
+                <div class="glass-panel rounded-3xl p-6 space-y-6 shadow-2xl border border-rose-500/30">
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-borderCol pb-4 gap-2">
+                        <div>
+                            <span class="text-[10px] font-extrabold uppercase tracking-widest text-rose-400">Zero-Mempool Protection Suite</span>
+                            <h3 class="text-base sm:text-lg font-black text-white flex items-center space-x-2 mt-1">
+                                <i class="fa-solid fa-shield-virus text-rose-400"></i>
+                                <span>AI MEV & Frontrun Shield (Encrypted Bundles)</span>
+                            </h3>
+                        </div>
+                        <span class="px-3 py-1 rounded-full bg-rose-500/15 text-rose-400 text-xs font-bold border border-rose-500/30">ACTIVE DEFENSE</span>
+                    </div>
+                    <p class="text-xs text-slate-300">Routes critical cross-chain state updates directly into Creditcoin private precompile relays, blocking sandwich bots and toxic extractors completely.</p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="p-5 bg-darkBg/80 rounded-2xl border border-borderCol space-y-3">
+                            <span class="text-xs text-slate-400 uppercase tracking-wider block font-semibold">Simulate Protected Transaction Bundle</span>
+                            <div class="space-y-2">
+                                <input type="text" id="mevInputTarget" value="0xLendingVaultPoolV4" class="w-full bg-cardBg border border-borderCol rounded-xl px-3 py-2 text-xs font-mono text-white focus:outline-none focus:border-rose-500">
+                                <button onclick="runMevSimulation()" class="w-full py-2.5 bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold rounded-xl shadow-md transition">Execute Encrypted Bundle via 0x0FD2</button>
+                            </div>
+                            <div id="mevResultBox" class="text-xs text-slate-300 space-y-1 font-mono pt-2">
+                                <div>Sandwich Bots Blocked: <span class="text-emerald-400 font-bold">14 Today</span></div>
+                                <div>Slippage Saved: <span class="text-cyan-400 font-bold">$12,450.00</span></div>
+                            </div>
+                        </div>
+                        <div class="p-5 bg-darkBg/80 rounded-2xl border border-borderCol space-y-3">
+                            <span class="text-xs text-slate-400 uppercase tracking-wider block font-semibold">Real-Time Threat Telemetry</span>
+                            <div class="space-y-2 font-mono text-xs">
+                                <div class="flex justify-between text-slate-400"><span>Mempool Exposure:</span> <span class="text-emerald-400 font-bold">0% (Private Relay)</span></div>
+                                <div class="flex justify-between text-slate-400"><span>Precompile Routing:</span> <span class="text-cyan-400 font-bold">Active (0x0FD2)</span></div>
+                                <div class="flex justify-between text-slate-400"><span>Latency Overhead:</span> <span class="text-amber-400 font-bold">&lt; 2ms</span></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ZK-DID STUDIO -->
+            <div id="tab-zkDidStudio" class="space-y-6 tab-pane hidden">
+                <div class="glass-panel rounded-3xl p-6 space-y-6 shadow-2xl border border-cyan-500/30">
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-borderCol pb-4 gap-2">
+                        <div>
+                            <span class="text-[10px] font-extrabold uppercase tracking-widest text-cyan-400">Identity & Reputation Studio</span>
+                            <h3 class="text-base sm:text-lg font-black text-white flex items-center space-x-2 mt-1">
+                                <i class="fa-solid fa-id-card text-cyan-400"></i>
+                                <span>ZK-DID Decentralized Credit Passport Generator</span>
+                            </h3>
+                        </div>
+                        <span class="px-3 py-1 rounded-full bg-cyan-500/15 text-cyan-400 text-xs font-bold border border-cyan-500/30">VERIFIABLE CREDENTIAL</span>
+                    </div>
+                    <p class="text-xs text-slate-300">Generate zero-knowledge identity credentials proving creditworthiness across multiple DeFi protocols without revealing your wallet history or transaction secrets.</p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="p-5 bg-darkBg/80 rounded-2xl border border-borderCol space-y-3">
+                            <span class="text-xs text-slate-400 uppercase tracking-wider block font-semibold">Passport Configuration</span>
+                            <div class="space-y-2 text-xs">
+                                <label class="block text-slate-300">Minimum Score Threshold to Prove:</label>
+                                <select id="didScoreSelect" class="w-full bg-cardBg border border-borderCol rounded-xl px-3 py-2 text-xs font-mono text-cyan-300 focus:outline-none focus:border-cyan-500">
+                                    <option value="700">Prime (> 700 Score)</option>
+                                    <option value="750">Elite Prime (> 750 Score)</option>
+                                    <option value="800">Whale Tier (> 800 Score)</option>
+                                </select>
+                                <button onclick="mintZkPassport()" class="w-full mt-2 py-2.5 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white text-xs font-bold rounded-xl shadow-md transition">Mint ZK-DID Passport Proof</button>
+                            </div>
+                        </div>
+                        <div class="p-5 bg-darkBg/80 rounded-2xl border border-borderCol flex flex-col justify-between space-y-3">
+                            <span class="text-xs text-slate-400 uppercase tracking-wider block font-semibold">Generated Passport Hash</span>
+                            <div id="didResultOutput" class="bg-cardBg p-3 rounded-xl border border-borderCol font-mono text-[11px] text-emerald-400 break-all">
+                                [Awaiting generation...] - Secure ZK proof container ready for deployment.
+                            </div>
+                            <button onclick="triggerAction('ZK-DID Passport successfully exported to Web3 wallet!')" class="py-2 bg-darkBg hover:bg-borderCol border border-borderCol text-cyan-300 text-xs rounded-xl">Add to Apple/Google Wallet ID</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- REFINANCE OPTIMIZER -->
+            <div id="tab-refinanceOptimizer" class="space-y-6 tab-pane hidden">
+                <div class="glass-panel rounded-3xl p-6 space-y-6 shadow-2xl border border-cyan-500/30">
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-borderCol pb-4 gap-2">
+                        <div>
+                            <span class="text-[10px] font-extrabold uppercase tracking-widest text-cyan-400">Automated Yield Optimizer</span>
+                            <h3 class="text-base sm:text-lg font-black text-white flex items-center space-x-2 mt-1">
+                                <i class="fa-solid fa-arrows-rotate text-cyan-400"></i>
+                                <span>Cross-Chain Debt Refinancing Auto-Optimizer</span>
+                            </h3>
+                        </div>
+                        <span class="px-3 py-1 rounded-full bg-cyan-500/15 text-cyan-400 text-xs font-bold border border-cyan-500/30">AUTO-SAVINGS</span>
+                    </div>
+                    <p class="text-xs text-slate-300">Scans active multi-chain loan positions and executes zero-gas refinancing via precompile 0x0FD2 when a lower interest rate is found.</p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="p-5 bg-darkBg/80 rounded-2xl border border-borderCol space-y-3">
+                            <span class="text-xs text-slate-400 uppercase tracking-wider block font-semibold">Active Loan Status</span>
+                            <div class="space-y-1 font-mono text-xs text-slate-300">
+                                <div>Current Protocol: <span class="text-amber-400">Aave v3 (Ethereum)</span></div>
+                                <div>Current APR: <span class="text-red-400 font-bold">7.8%</span></div>
+                                <div>Optimized Target: <span class="text-emerald-400">Morpho Blue (Arbitrum) - 4.2% APR</span></div>
+                            </div>
+                            <button onclick="runRefinanceScan()" class="w-full mt-2 py-2.5 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white text-xs font-bold rounded-xl shadow-md transition">Execute Refinance via 0x0FD2</button>
+                        </div>
+                        <div class="p-5 bg-darkBg/80 rounded-2xl border border-borderCol flex flex-col justify-between space-y-3">
+                            <span class="text-xs text-slate-400 uppercase tracking-wider block font-semibold">Projected Annual Savings</span>
+                            <div id="refinanceResult" class="bg-cardBg p-4 rounded-xl border border-borderCol font-mono text-sm text-emerald-400 font-bold">
+                                $3,420.00 / year saved with zero manual claim forms.
+                            </div>
+                            <span class="text-[11px] text-slate-500">Protected by Aegis Single-Lien UCC-9 smart contract guardrail.</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- GAS SPONSOR POOL -->
+            <div id="tab-gasSponsorPool" class="space-y-6 tab-pane hidden">
+                <div class="glass-panel rounded-3xl p-6 space-y-6 shadow-2xl border border-emerald-500/30">
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-borderCol pb-4 gap-2">
+                        <div>
+                            <span class="text-[10px] font-extrabold uppercase tracking-widest text-emerald-400">Gasless Infrastructure</span>
+                            <h3 class="text-base sm:text-lg font-black text-white flex items-center space-x-2 mt-1">
+                                <i class="fa-solid fa-gas-pump text-emerald-400"></i>
+                                <span>Gasless Sponsor Pool & Subsidies</span>
+                            </h3>
+                        </div>
+                        <span class="px-3 py-1 rounded-full bg-emerald-500/15 text-emerald-400 text-xs font-bold border border-emerald-500/30">SPONSORED RELAY</span>
+                    </div>
+                    <p class="text-xs text-slate-300">Validators pool Creditcoin fees to sponsor gasless transactions for verified prime-tier borrowers.</p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="p-5 bg-darkBg/80 rounded-2xl border border-borderCol space-y-3">
+                            <span class="text-xs text-slate-400 uppercase tracking-wider block font-semibold">Available Sponsor Balance</span>
+                            <div class="text-2xl font-black text-emerald-400 font-mono">45,000 CTC</div>
+                            <button onclick="claimGasSponsor()" class="w-full mt-2 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl shadow-md transition">Request Gas Subsidy Allocation</button>
+                        </div>
+                        <div class="p-5 bg-darkBg/80 rounded-2xl border border-borderCol space-y-3">
+                            <span class="text-xs text-slate-400 uppercase tracking-wider block font-semibold">Subsidy Eligibility</span>
+                            <div class="space-y-2 text-xs font-mono text-slate-300">
+                                <div>Credit Score: <span class="text-emerald-400 font-bold">&gt; 750 (Eligible)</span></div>
+                                <div>Daily Subsidy Limit: <span class="text-cyan-400 font-bold">50 CTC / user</span></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- LSD YIELD BOOSTER -->
+            <div id="tab-lsdYieldBooster" class="space-y-6 tab-pane hidden">
+                <div class="glass-panel rounded-3xl p-6 space-y-6 shadow-2xl border border-purple-500/30">
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-borderCol pb-4 gap-2">
+                        <div>
+                            <span class="text-[10px] font-extrabold uppercase tracking-widest text-purple-400">Staking Derivatives</span>
+                            <h3 class="text-base sm:text-lg font-black text-white flex items-center space-x-2 mt-1">
+                                <i class="fa-solid fa-chart-pie text-purple-400"></i>
+                                <span>Cross-Chain LSD Yield Booster</span>
+                            </h3>
+                        </div>
+                        <span class="px-3 py-1 rounded-full bg-purple-500/15 text-purple-400 text-xs font-bold border border-purple-500/30">COMPOUND YIELD</span>
+                    </div>
+                    <p class="text-xs text-slate-300">Stake Creditcoin Liquid Staking Tokens (CTC-LST) into cross-chain validation vaults for compounding multi-protocol rewards.</p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="p-5 bg-darkBg/80 rounded-2xl border border-borderCol space-y-3">
+                            <span class="text-xs text-slate-400 uppercase tracking-wider block font-semibold">Deposit CTC-LST</span>
+                            <input type="text" value="500 CTC-LST" class="w-full bg-cardBg border border-borderCol rounded-xl px-3 py-2 text-xs font-mono text-white focus:outline-none focus:border-purple-500">
+                            <button onclick="boostLsdYield()" class="w-full py-2.5 bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold rounded-xl shadow-md transition">Activate Yield Booster</button>
+                        </div>
+                        <div class="p-5 bg-darkBg/80 rounded-2xl border border-borderCol space-y-3">
+                            <span class="text-xs text-slate-400 uppercase tracking-wider block font-semibold">Current Boosted APY</span>
+                            <div class="text-3xl font-black text-purple-400 font-mono">18.5% APY</div>
+                            <p class="text-[11px] text-slate-500">Includes base staking reward + cross-chain attestation fee share.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- IMMUTABLE SNAPSHOT -->
+            <div id="tab-immutableSnapshot" class="space-y-6 tab-pane hidden">
+                <div class="glass-panel rounded-3xl p-6 space-y-6 shadow-2xl border border-amber-500/30">
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-borderCol pb-4 gap-2">
+                        <div>
+                            <span class="text-[10px] font-extrabold uppercase tracking-widest text-amber-400">Audit Proofs</span>
+                            <h3 class="text-base sm:text-lg font-black text-white flex items-center space-x-2 mt-1">
+                                <i class="fa-solid fa-cube text-amber-400"></i>
+                                <span>Immutable Ledger Snapshot & Proof Bundler</span>
+                            </h3>
+                        </div>
+                        <span class="px-3 py-1 rounded-full bg-amber-500/15 text-amber-400 text-xs font-bold border border-amber-500/30">CRYPTOGRAPHIC BUNDLE</span>
+                    </div>
+                    <p class="text-xs text-slate-300">Generate cryptographically signed proof bundles of all active cross-chain liens for institutional audits and regulatory filings.</p>
+                    <div class="p-5 bg-darkBg/80 rounded-2xl border border-borderCol space-y-3">
+                        <span class="text-xs text-slate-400 uppercase tracking-wider block font-semibold">Snapshot Generator</span>
+                        <div id="snapshotOutput" class="bg-cardBg p-3 rounded-xl border border-borderCol font-mono text-[11px] text-cyan-300">
+                            [Ready to bundle] - Click below to generate merkle root snapshot.
+                        </div>
+                        <button onclick="generateImmutableSnapshot()" class="w-full py-3 bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold rounded-xl shadow-md transition">Generate Signed Ledger Snapshot</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AUTONOMOUS CIRCUIT BREAKER & EMERGENCY AUTO-LIQUIDATION SHIELD -->
+            <div id="tab-circuitBreaker" class="space-y-6 tab-pane hidden">
+                <div class="glass-panel rounded-3xl p-6 sm:p-8 space-y-6 shadow-2xl border border-red-500/40 bg-gradient-to-b from-red-950/20 via-darkBg/90 to-darkBg">
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-borderCol pb-4 gap-2">
+                        <div>
+                            <span class="text-[10px] font-extrabold uppercase tracking-widest text-red-400">Ultra-Elite Risk Management Module</span>
+                            <h3 class="text-base sm:text-xl font-black text-white flex items-center space-x-2 mt-1">
+                                <i class="fa-solid fa-power-off text-red-500 animate-pulse"></i>
+                                <span>Autonomous Circuit Breaker & Emergency Auto-Liquidation Shield</span>
+                            </h3>
+                        </div>
+                        <span class="px-3 py-1 rounded-full bg-red-500/20 text-red-300 text-xs font-bold border border-red-500/40 animate-pulse">DEFENDER ARMED</span>
+                    </div>
+                    <p class="text-xs sm:text-sm text-slate-300 leading-relaxed">
+                        Monitors real-time cross-chain oracle health, volatility cascades, and protocol debt ratios via precompile <code class="text-cyan-400 font-mono">0x0FD2</code>. If collateral health factors breach safe thresholds, this shield instantly triggers programmatic circuit breakers and executes autonomous auto-liquidations using bonded operator reserves before bad debt can accumulate.
+                    </p>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="p-4 bg-darkBg/80 rounded-2xl border border-borderCol space-y-2 shadow-inner">
+                            <span class="text-[10px] text-slate-400 uppercase block font-semibold">Circuit Breaker Status</span>
+                            <span id="cbStatusText" class="text-lg font-black text-emerald-400 font-mono">NORMAL (MONITORING)</span>
+                            <p class="text-[11px] text-slate-500">All cross-chain oracle feeds verified stable.</p>
+                        </div>
+                        <div class="p-4 bg-darkBg/80 rounded-2xl border border-borderCol space-y-2 shadow-inner">
+                            <span class="text-[10px] text-slate-400 uppercase block font-semibold">Max Slippage Tolerance</span>
+                            <span class="text-lg font-black text-cyan-400 font-mono">0.50% Hard Cap</span>
+                            <p class="text-[11px] text-slate-500">Enforced during emergency auto-liquidations.</p>
+                        </div>
+                        <div class="p-4 bg-darkBg/80 rounded-2xl border border-borderCol space-y-2 shadow-inner">
+                            <span class="text-[10px] text-slate-400 uppercase block font-semibold">Emergency Insurance Bond</span>
+                            <span class="text-lg font-black text-amber-400 font-mono">250,000 CTC</span>
+                            <p class="text-[11px] text-slate-500">Bonded validator reserves backing shield.</p>
+                        </div>
+                    </div>
+
+                    <div class="p-5 bg-darkBg/90 rounded-2xl border border-red-500/30 space-y-4">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-bold text-slate-200 uppercase tracking-wider">Simulate Volatility Stress Test / Manual Trigger</span>
+                            <span class="text-[11px] text-slate-400 font-mono">Precompile Hook: 0x0FD2_CB_EXEC</span>
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <button onclick="triggerCircuitBreakerSimulation('cascade')" class="w-full py-3 bg-red-950/60 hover:bg-red-900/60 border border-red-500/50 text-red-200 text-xs font-bold rounded-xl shadow-md transition flex items-center justify-center space-x-2">
+                                <i class="fa-solid fa-triangle-exclamation text-red-400"></i>
+                                <span>Simulate Oracle Cascade & Trigger Shield</span>
+                            </button>
+                            <button onclick="triggerCircuitBreakerSimulation('reset')" class="w-full py-3 bg-darkBg/80 hover:bg-borderCol border border-borderCol text-cyan-300 text-xs font-bold rounded-xl shadow-md transition flex items-center justify-center space-x-2">
+                                <i class="fa-solid fa-rotate-right text-cyan-400"></i>
+                                <span>Reset Circuit Breaker to Normal</span>
+                            </button>
+                        </div>
+                        <div id="cbLogBox" class="bg-cardBg p-4 rounded-xl border border-borderCol font-mono text-[11px] text-slate-300 space-y-1 h-28 overflow-y-auto">
+                            <div class="text-cyan-400">> [CIRCUIT_BREAKER_INIT] Autonomous Shield listening on precompile 0x0FD2...</div>
+                            <div class="text-emerald-400">> [STATUS] System healthy. Health factor average across all vaults: 2.14</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ================================================= -->
+            <!-- NAYE BRAND NEW TABS CONTENT ADDED BELOW           -->
+            <!-- ================================================= -->
+
+            <!-- QUANTUM-RESISTANT VAULT SHIELD TAB -->
+            <div id="tab-quantumResistantVault" class="space-y-6 tab-pane hidden">
+                <div class="glass-panel rounded-3xl p-6 sm:p-8 space-y-6 shadow-2xl border border-indigo-500/40 bg-gradient-to-b from-indigo-950/20 via-darkBg/90 to-darkBg">
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-borderCol pb-4 gap-2">
+                        <div>
+                            <span class="text-[10px] font-extrabold uppercase tracking-widest text-indigo-400">Post-Quantum Cryptography</span>
+                            <h3 class="text-base sm:text-xl font-black text-white flex items-center space-x-2 mt-1">
+                                <i class="fa-solid fa-atom text-indigo-400 animate-spin"></i>
+                                <span>Quantum-Resistant Vault Shield (Lattice-Based)</span>
+                            </h3>
+                        </div>
+                        <span class="px-3 py-1 rounded-full bg-indigo-500/20 text-indigo-300 text-xs font-bold border border-indigo-500/40">CRYSTALS-Dilithium</span>
+                    </div>
+                    <p class="text-xs sm:text-sm text-slate-300 leading-relaxed">
+                        Encrypts cross-chain vault signatures and collateral keys using lattice-based post-quantum cryptography algorithms (CRYSTALS-Dilithium & Kyber). Safeguards long-term institutional loans against future quantum computer decryption attacks via precompile <code class="text-cyan-400 font-mono">0x0FD2</code>.
+                    </p>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="p-4 bg-darkBg/80 rounded-2xl border border-borderCol space-y-2 shadow-inner">
+                            <span class="text-[10px] text-slate-400 uppercase block font-semibold">Lattice Encryption Status</span>
+                            <span class="text-lg font-black text-indigo-400 font-mono">SECURE (Level 5)</span>
+                            <p class="text-[11px] text-slate-500">Resistant to Shor's algorithm and quantum brute force.</p>
+                        </div>
+                        <div class="p-4 bg-darkBg/80 rounded-2xl border border-borderCol space-y-2 shadow-inner">
+                            <span class="text-[10px] text-slate-400 uppercase block font-semibold">Active Key Encapsulation</span>
+                            <span class="text-lg font-black text-cyan-400 font-mono">Kyber-1024</span>
+                            <p class="text-[11px] text-slate-500">Zero cryptographic leakage across relay nodes.</p>
+                        </div>
+                        <div class="p-4 bg-darkBg/80 rounded-2xl border border-borderCol space-y-2 shadow-inner">
+                            <span class="text-[10px] text-slate-400 uppercase block font-semibold">Protected Vault Value</span>
+                            <span class="text-lg font-black text-emerald-400 font-mono">$48,200,000</span>
+                            <p class="text-[11px] text-slate-500">Institutional tier liquidity locked securely.</p>
+                        </div>
+                    </div>
+
+                    <div class="p-5 bg-darkBg/90 rounded-2xl border border-indigo-500/30 space-y-4">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-bold text-slate-200 uppercase tracking-wider">Simulate Quantum Key Rotation & Lattice Migration</span>
+                            <span class="text-[11px] text-slate-400 font-mono">Precompile Hook: 0x0FD2_PQC_KEYGEN</span>
+                        </div>
+                        <button onclick="triggerQuantumShieldSimulation()" class="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-xl shadow-md transition flex items-center justify-center space-x-2">
+                            <i class="fa-solid fa-key text-white"></i>
+                            <span>Rotate Vault Keys to Post-Quantum Lattice</span>
+                        </button>
+                        <div id="quantumLogBox" class="bg-cardBg p-4 rounded-xl border border-borderCol font-mono text-[11px] text-slate-300 space-y-1 h-28 overflow-y-auto">
+                            <div class="text-indigo-400">> [PQC_INIT] Quantum shield active on precompile 0x0FD2...</div>
+                            <div class="text-emerald-400">> [READY] Lattice-based key encapsulation parameters fully synchronized.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI DEEP CREDIT UNDERWRITER TAB -->
+            <div id="tab-aiCreditUnderwriter" class="space-y-6 tab-pane hidden">
+                <div class="glass-panel rounded-3xl p-6 sm:p-8 space-y-6 shadow-2xl border border-pink-500/40 bg-gradient-to-b from-pink-950/20 via-darkBg/90 to-darkBg">
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-borderCol pb-4 gap-2">
+                        <div>
+                            <span class="text-[10px] font-extrabold uppercase tracking-widest text-pink-400">Autonomous Neural Credit Risk</span>
+                            <h3 class="text-base sm:text-xl font-black text-white flex items-center space-x-2 mt-1">
+                                <i class="fa-solid fa-brain text-pink-400"></i>
+                                <span>AI Deep Credit Underwriter & Yield Forecaster</span>
+                            </h3>
+                        </div>
+                        <span class="px-3 py-1 rounded-full bg-pink-500/20 text-pink-300 text-xs font-bold border border-pink-500/40">NEURAL ENGINE ACTIVE</span>
+                    </div>
+                    <p class="text-xs sm:text-sm text-slate-300 leading-relaxed">
+                        Analyzes multi-chain historical transaction vectors, repayment consistency, and wallet behavior using an on-chain neural network model. Instantly calculates customized collateral factors and tailored interest rates via Creditcoin precompile <code class="text-cyan-400 font-mono">0x0FD2</code>.
+                    </p>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="p-5 bg-darkBg/80 rounded-2xl border border-borderCol space-y-3">
+                            <span class="text-xs text-slate-400 uppercase tracking-wider block font-semibold">Underwriting Neural Input</span>
+                            <div class="space-y-2">
+                                <label class="block text-xs text-slate-300">Target Wallet Address / Hash:</label>
+                                <input type="text" id="underwriterWalletInput" value="0x89Fdc32e4912...a1" class="w-full bg-cardBg border border-borderCol rounded-xl px-3 py-2 text-xs font-mono text-white focus:outline-none focus:border-pink-500">
+                                <button onclick="runAiUnderwriting()" class="w-full py-2.5 bg-pink-600 hover:bg-pink-500 text-white text-xs font-bold rounded-xl shadow-md transition">Run AI Neural Credit Underwriting</button>
+                            </div>
+                        </div>
+                        <div class="p-5 bg-darkBg/80 rounded-2xl border border-borderCol flex flex-col justify-between space-y-3">
+                            <span class="text-xs text-slate-400 uppercase tracking-wider block font-semibold">Neural Underwriting Verdict</span>
+                            <div id="underwriterResultOutput" class="bg-cardBg p-4 rounded-xl border border-borderCol font-mono text-xs text-slate-300 space-y-1">
+                                <div>Confidence Score: <span class="text-pink-400 font-bold">98.4%</span></div>
+                                <div>Recommended LTV: <span class="text-emerald-400 font-bold">82.5%</span></div>
+                                <div>Assigned Rate: <span class="text-cyan-400 font-bold">4.1% APR</span></div>
+                            </div>
+                            <span class="text-[11px] text-slate-500">Verified and sealed via Creditcoin attestation precompile.</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- AI Drawer Modal -->
+    <div id="aiDrawer" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-3 sm:p-4">
+        <div class="glass-panel w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden flex flex-col h-[520px] border border-cyan-500/30">
+            <div class="px-6 py-4 bg-darkBg/80 border-b border-borderCol flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <div class="h-8 w-8 rounded-lg bg-cyan-600 flex items-center justify-center text-white text-xs shadow-lg shadow-cyan-600/40"><i class="fa-solid fa-microchip"></i></div>
+                    <div>
+                        <h4 class="text-sm font-bold text-white">Aegis Intelligence AI</h4>
+                        <span class="text-[10px] text-emerald-400 flex items-center"><span class="h-1.5 w-1.5 rounded-full bg-emerald-400 inline-block mr-1"></span> Live on Creditcoin Testnet</span>
+                    </div>
+                </div>
+                <button onclick="toggleAssistantDrawer()" class="text-slate-400 hover:text-white text-sm"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div id="chatMessages" class="flex-1 p-4 overflow-y-auto space-y-3 text-xs bg-darkBg/40">
+                <div class="bg-darkBg/80 p-3 rounded-2xl max-w-[85%] text-slate-300 border border-borderCol shadow-md">
+                    Greetings! I am Aegis Intelligence. Ask me about Attestcoin integration, proof precompiles, or cross-chain lien resolution.
+                </div>
+            </div>
+            <div class="p-3 bg-darkBg/80 border-t border-borderCol flex items-center space-x-2">
+                <input type="text" id="chatInput" placeholder="Ask about Attestcoin, precompiles, liquidity..." class="flex-1 bg-cardBg border border-borderCol rounded-xl px-4 py-2 text-xs text-white focus:outline-none focus:border-cyan-500 shadow-inner" onkeypress="if(event.key === 'Enter') sendAIChat()">
+                <button onclick="sendAIChat()" class="px-4 py-2 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white rounded-xl text-xs font-semibold shadow-md shadow-cyan-500/20">Send</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ZK Proof Modal -->
+    <div id="zkModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-3 sm:p-4">
+        <div class="glass-panel w-full max-w-md rounded-3xl shadow-2xl p-6 space-y-4 border border-cyan-500/30">
+            <div class="flex items-center justify-between border-b border-borderCol pb-3">
+                <h4 class="text-sm font-bold text-white flex items-center"><i class="fa-solid fa-fingerprint text-cyan-400 mr-2"></i> ZK State Proof Details</h4>
+                <button onclick="openZkModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="bg-darkBg/80 p-3 rounded-xl font-mono text-[11px] text-cyan-300 space-y-1 overflow-x-auto shadow-inner">
+                <div>Proof: 0x981f...31a0</div>
+                <div>Block: #1829391</div>
+                <div>Validator: Creditcoin Node #4</div>
+            </div>
+            <button onclick="openZkModal(); showToast('Proof copied to clipboard!');" class="w-full py-2.5 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white text-xs font-bold rounded-xl shadow-lg shadow-cyan-500/20">Copy Raw Proof Hex</button>
+        </div>
+    </div>
+
+    <script>
+        let walletConnected = false;
+
+        // Initialize Three.js 3D Cryptographic Node Network Background
+        function init3DNodeMesh() {
+            const container = document.getElementById('mesh-container');
+            const scene = new THREE.Scene();
+            const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+            const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            container.appendChild(renderer.domElement);
+
+            const particleCount = 120;
+            const geometry = new THREE.BufferGeometry();
+            const positions = new Float32Array(particleCount * 3);
+
+            for(let i = 0; i < particleCount * 3; i++) {
+                positions[i] = (Math.random() - 0.5) * 20;
+            }
+
+            geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+            const material = new THREE.PointsMaterial({
+                color: 0x06b6d4,
+                size: 0.12,
+                transparent: true,
+                opacity: 0.7
+            });
+            const particles = new THREE.Points(geometry, material);
+            scene.add(particles);
+
+            const lineMaterial = new THREE.LineBasicMaterial({
+                color: 0x0284c7,
+                transparent: true,
+                opacity: 0.15
+            });
+            const lineGeometry = new THREE.BufferGeometry();
+            const linePositions = [];
+
+            for(let i = 0; i < particleCount; i++) {
+                for(let j = i + 1; j < particleCount; j++) {
+                    if(Math.random() > 0.95) {
+                        linePositions.push(
+                            positions[i*3], positions[i*3+1], positions[i*3+2],
+                            positions[j*3], positions[j*3+1], positions[j*3+2]
+                        );
+                    }
+                }
+            }
+            lineGeometry.setAttribute('position', new THREE.Float32BufferAttribute(linePositions, 3));
+            const lines = new THREE.LineSegments(lineGeometry, lineMaterial);
+            scene.add(lines);
+
+            camera.position.z = 10;
+
+            function animate() {
+                requestAnimationFrame(animate);
+                particles.rotation.y += 0.0008;
+                particles.rotation.x += 0.0004;
+                lines.rotation.y += 0.0008;
+                lines.rotation.x += 0.0004;
+                renderer.render(scene, camera);
+            }
+            animate();
+
+            window.addEventListener('resize', () => {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            });
+        }
+        window.addEventListener('DOMContentLoaded', init3DNodeMesh);
+
+        // Sidebar Navigation and Mobile Toggle
+        function toggleMobileSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            sidebar.classList.toggle('-translate-x-full');
+            overlay.classList.toggle('hidden');
+        }
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-pane').forEach(el => el.classList.add('hidden'));
+            const target = document.getElementById('tab-' + tabId);
+            if(target) {
+                target.classList.remove('hidden');
+            }
+            document.querySelectorAll('aside button[onclick^="switchTab"]').forEach(btn => {
+                btn.className = "w-full flex items-center space-x-3 px-3.5 py-3 rounded-xl text-slate-400 hover:text-white hover:bg-borderCol/50 transition";
+            });
+            const activeBtn = document.getElementById('nav-' + tabId);
+            if(activeBtn) {
+                activeBtn.className = "w-full flex items-center space-x-3 px-3.5 py-3 rounded-xl bg-cyan-500/15 text-cyan-400 border border-cyan-500/30 transition shadow-lg shadow-cyan-500/5 font-bold";
+            }
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            if(!sidebar.classList.contains('-translate-x-full') && window.innerWidth < 1024) {
+                sidebar.classList.add('-translate-x-full');
+                overlay.classList.add('hidden');
+            }
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Modals & UI Toggles
+        function toggleAssistantDrawer() {
+            const drawer = document.getElementById('aiDrawer');
+            drawer.classList.toggle('hidden');
+        }
+
+        function openZkModal() {
+            const modal = document.getElementById('zkModal');
+            modal.classList.toggle('hidden');
+        }
+
+        // Action Trigger Notification
+        function triggerAction(message) {
+            const toast = document.createElement('div');
+            toast.className = "fixed bottom-5 right-5 z-50 glass-panel px-4 py-3 rounded-2xl text-xs text-cyan-300 border border-cyan-500/40 shadow-2xl animate-bounce flex items-center space-x-2";
+            toast.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-400"></i><span>${message}</span>`;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 4000);
+        }
+
+        function showToast(message) {
+            triggerAction(message);
+        }
+
+        // Wallet Connection Simulator
+        function connectWalletSim() {
+            walletConnected = !walletConnected;
+            const btnText = document.getElementById('walletText');
+            if(walletConnected) {
+                btnText.innerText = "0x89Fd...32e4";
+                triggerAction("Web3 Wallet connected successfully via 0x0FD2 precompile!");
+            } else {
+                btnText.innerText = "Connect";
+                triggerAction("Wallet disconnected.");
+            }
+        }
+
+        // Dynamic Interest Rate Engine Calculation
+        function updateDynamicRate(val) {
+            document.getElementById('riskScoreVal').innerText = val + " / 850 (" + (val > 750 ? "Prime Tier" : val > 650 ? "Standard Tier" : "High Risk") + ")";
+            let surcharge = ((850 - val) / 100 * 0.4).toFixed(1);
+            document.getElementById('surchargeVal').innerText = "+" + surcharge + "%";
+            let finalRate = (5.0 + parseFloat(surcharge)).toFixed(1);
+            document.getElementById('finalAprVal').innerText = finalRate + "%";
+        }
+
+        // Run Pipeline Simulator
+        function runSimulatorPipeline() {
+            const logBox = document.getElementById('logStreamBox');
+            const timestamp = new Date().toLocaleTimeString();
+            logBox.innerHTML += `<div class="text-cyan-300">> [${timestamp}] Running simulator pipeline verification...</div>`;
+            logBox.innerHTML += `<div class="text-emerald-400">> [SUCCESS] Merkle root confirmed across 12 validator nodes. Zero dispute found.</div>`;
+            logBox.scrollTop = logBox.scrollHeight;
+            triggerAction("Pipeline simulator executed successfully!");
+        }
+
+        // Verify Proof Hash
+        function verifyProofHash() {
+            triggerAction("Precompile 0x0FD2 cryptographic state verified successfully. Zero anomalies.");
+        }
+
+        // Export Pitch Summary
+        function exportJudgesDeck() {
+            triggerAction("Judges Pitch Summary package downloaded successfully (PDF + JSON proofs).");
+        }
+
+        // Trustless Audit Simulator
+        function runTrustlessAudit() {
+            const inputVal = document.getElementById('auditContractInput').value;
+            const resBox = document.getElementById('auditResultBox');
+            resBox.innerHTML = `<div>Auditing target: <span class="text-cyan-400">${inputVal}</span></div>` +
+                               `<div class="text-emerald-400 font-bold">> Audit Passed: No reentrancy vulnerabilities found. Precompile lock active.</div>`;
+            triggerAction("Trustless audit completed via 0x0FD2 precompile.");
+        }
+
+        // Auto Payout Simulation
+        function executeInstantAutoPayout() {
+            const display = document.getElementById('houseBalanceDisplay');
+            display.innerText = "0.00 CTC (Paid Out)";
+            triggerAction("1,500.00 CTC successfully transferred via gas-free precompile payout!");
+        }
+
+        // MEV Simulation
+        function runMevSimulation() {
+            triggerAction("Encrypted bundle successfully dispatched via private Creditcoin relay. 0 sandwich attacks possible.");
+        }
+
+        // ZK Passport Mint
+        function mintZkPassport() {
+            const score = document.getElementById('didScoreSelect').value;
+            const output = document.getElementById('didResultOutput');
+            output.innerText = `zkDID_PASS_HASH_0x7b921e490fc832_SCORE_${score}_VERIFIED`;
+            triggerAction("ZK-DID Credit Passport successfully minted!");
+        }
+
+        // Refinance Scan
+        function runRefinanceScan() {
+            triggerAction("Refinanced successfully to Morpho Blue at 4.2% APR. Annual savings locked.");
+        }
+
+        // Gas Sponsor
+        function claimGasSponsor() {
+            triggerAction("50 CTC gas subsidy allocated to wallet via validator sponsor pool.");
+        }
+
+        // LSD Booster
+        function boostLsdYield() {
+            triggerAction("CTC-LST successfully staked into compounding yield vault (18.5% APY active).");
+        }
+
+        // Snapshot
+        function generateImmutableSnapshot() {
+            const snap = document.getElementById('snapshotOutput');
+            snap.innerText = "SNAPSHOT_ROOT_0x49f12891ea03921849102bc4190_SIGNED_BY_12_VALIDATORS";
+            triggerAction("Immutable ledger snapshot generated and signed cryptographically!");
+        }
+
+        // Circuit Breaker Simulator
+        function triggerCircuitBreakerSimulation(actionType) {
+            const statusText = document.getElementById('cbStatusText');
+            const logBox = document.getElementById('cbLogBox');
+            const timestamp = new Date().toLocaleTimeString();
+            if(actionType === 'cascade') {
+                statusText.innerText = "CRITICAL: ORACLE CASCADE DETECTED";
+                statusText.className = "text-lg font-black text-red-500 font-mono animate-pulse";
+                logBox.innerHTML += `<div class="text-red-400">> [${timestamp}] Oracle price deviation > 15% detected across feed! Circuit breaker triggered.</div>`;
+                logBox.innerHTML += `<div class="text-amber-400">> [AUTO-LIQUIDATE] Executing emergency auto-liquidation using 250,000 CTC reserve...</div>`;
+                logBox.scrollTop = logBox.scrollHeight;
+                triggerAction("Autonomous Circuit Breaker triggered! Emergency auto-liquidation defense active.");
+            } else {
+                statusText.innerText = "NORMAL (MONITORING)";
+                statusText.className = "text-lg font-black text-emerald-400 font-mono";
+                logBox.innerHTML += `<div class="text-cyan-300">> [${timestamp}] System reset to normal monitoring. Vault health indices nominal.</div>`;
+                logBox.scrollTop = logBox.scrollHeight;
+                triggerAction("Circuit Breaker reset to normal monitoring mode.");
+            }
+        }
+
+        // ====================================================
+        // NAYE BRAND NEW FUNCTIONS ADDED FOR NEW MODULES
+        // ====================================================
+
+        // Quantum Shield Simulation Function
+        function triggerQuantumShieldSimulation() {
+            const logBox = document.getElementById('quantumLogBox');
+            const timestamp = new Date().toLocaleTimeString();
+            logBox.innerHTML += `<div class="text-indigo-300">> [${timestamp}] Rotating vault keys to CRYSTALS-Dilithium lattice...</div>`;
+            logBox.innerHTML += `<div class="text-emerald-400">> [SUCCESS] Post-quantum encapsulation active. All institutional assets secured against quantum decryption.</div>`;
+            logBox.scrollTop = logBox.scrollHeight;
+            triggerAction("Quantum-Resistant Vault Shield successfully rotated and secured!");
+        }
+
+        // AI Credit Underwriter Function
+        function runAiUnderwriting() {
+            const walletInput = document.getElementById('underwriterWalletInput').value;
+            const output = document.getElementById('underwriterResultOutput');
+            output.innerHTML = `<div>Target: <span class="text-pink-400">${walletInput}</span></div>` +
+                               `<div>AI Confidence: <span class="text-pink-400 font-bold">99.1% (AAA Grade)</span></div>` +
+                               `<div>Optimized LTV: <span class="text-emerald-400 font-bold">85.0% Limit</span></div>` +
+                               `<div>Dynamic APR: <span class="text-cyan-400 font-bold">3.8% (Prime Discount)</span></div>`;
+            triggerAction("AI Neural Credit Underwriting analysis completed successfully via precompile 0x0FD2!");
+        }
+
+        // AI Chatbot Logic
+        function sendAIChat() {
+            const input = document.getElementById('chatInput');
+            const msgBox = document.getElementById('chatMessages');
+            const text = input.value.trim();
+            if(!text) return;
+
+            msgBox.innerHTML += `<div class="bg-cyan-950/40 p-3 rounded-2xl max-w-[85%] ml-auto text-cyan-200 border border-cyan-500/20 shadow-md">${text}</div>`;
+            input.value = '';
+            msgBox.scrollTop = msgBox.scrollHeight;
+
+            setTimeout(() => {
+                let reply = "I have verified your request against Creditcoin precompile 0x0FD2. The state inclusion proof is fully synchronized across all 12 validator nodes.";
+                const lower = text.toLowerCase();
+                if(lower.includes('circuit') || lower.includes('breaker')) {
+                    reply = "The Autonomous Circuit Breaker constantly monitors health factors and can instantly execute emergency auto-liquidations using bonded reserves.";
+                } else if(lower.includes('attestcoin') || lower.includes('proof')) {
+                    reply = "Attestcoin bridges cross-chain state proofs in ~15 seconds with zero multi-sig bottlenecks or manual claim forms.";
+                } else if(lower.includes('quantum') || lower.includes('lattice')) {
+                    reply = "The new Quantum-Resistant Vault Shield employs lattice-based CRYSTALS-Dilithium cryptography to protect institutional assets against future quantum threats.";
+                } else if(lower.includes('ai') || lower.includes('underwriter')) {
+                    reply = "The AI Deep Credit Underwriter neural engine evaluates historical transaction vectors to assign optimal LTV and interest rates automatically.";
+                }
+                msgBox.innerHTML += `<div class="bg-darkBg/80 p-3 rounded-2xl max-w-[85%] text-slate-300 border border-borderCol shadow-md">${reply}</div>`;
+                msgBox.scrollTop = msgBox.scrollHeight;
+            }, 600);
+        }
+    </script>
+</body>
+</html>
+
