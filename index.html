@@ -1490,17 +1490,42 @@
         }
 
         // Wallet Connection Simulator
-        function connectWalletSim() {
-            walletConnected = !walletConnected;
-            const btnText = document.getElementById('walletText');
-            if(walletConnected) {
-                btnText.innerText = "0x89Fd...32e4";
-                triggerAction("Web3 Wallet connected successfully via 0x0FD2 precompile!");
-            } else {
-                btnText.innerText = "Connect";
-                triggerAction("Wallet disconnected.");
+   async function connectWalletSim() {
+    if (typeof window.ethereum !== 'undefined') {
+        try {
+            const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+            const realAddress = accounts[0];
+            
+            if (realAddress) {
+                const shortAddr = realAddress.substring(0, 6) + "..." + realAddress.substring(realAddress.length - 4);
+                
+                const statusEl = document.getElementById('walletStatus') || document.getElementById('walletText');
+                if (statusEl) {
+                    statusEl.innerText = shortAddr;
+                } else {
+                    console.log("Connected Address:", shortAddr);
+                }
+                
+                if (typeof triggerAction === 'function') {
+                    triggerAction("Web3 Wallet connected successfully!");
+                }
             }
+        } catch (error) {
+            console.error("User rejected the connection request:", error);
         }
+    } else {
+        alert("Web3 Wallet extension is not installed in your browser!");
+    }
+}
+
+
+
+
+
+
+
+
+        
 
         // Dynamic Interest Rate Engine Calculation
         function updateDynamicRate(val) {
